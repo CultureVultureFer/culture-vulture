@@ -2,7 +2,7 @@
 
 # Opis projekta
 
-Ovaj projekt je rezultat timskog rada u sklopu projektong zadatka kolegija [Programsko inženjerstvo](https://www.fer.unizg.hr/predmet/proinz) na Fakultetu elektrotehnike i računarstva
+Ovaj projekt je rezultat timskog rada u sklopu projektnog zadatka kolegija [Programsko inženjerstvo](https://www.fer.unizg.hr/predmet/proinz) na Fakultetu elektrotehnike i računarstva
 Sveučilišta u Zagrebu
 
 Kao projektni zadatak radit ćemo aplikaciju **CultureVulture**.
@@ -55,18 +55,18 @@ Ideja koja je dovela do ovog projekta zapravo je proizašla iz toga da je više 
 
 # Tehnologije
 
-Frontend: React
-Backend: Django
-Database: PostgreSQL
-Project management: GitHub, tbd
-Vanjski servisi: OAuth 2.0, izvor događaja (tbd), Google Maps API, Google Calendar API
+- Frontend: React
+- Backend: Django
+- Database: PostgreSQL
+- Project management: GitHub, tbd
+- Vanjski servisi: OAuth 2.0, izvor događaja (tbd), Google Maps API, Google Calendar API
 
 # Članovi tima
 
-Karlo Čehulić: Team Lead
-Ivan Bunić: Frontend engineer
-Matija Krivec: Backend engineer
-Roko Gulić: Backend engineer
-Tomislav Facković: Frontend engineer
-Vanda Meić: Frontend engineer
-Tibor Brestovac: Backend engineer
+- Karlo Čehulić: Team Lead
+- Ivan Bunić: Frontend engineer
+- Matija Krivec: Backend engineer
+- Roko Gulić: Backend engineer
+- Tomislav Facković: Frontend engineer
+- Vanda Meić: Frontend engineer
+- Tibor Brestovac: Backend engineer
