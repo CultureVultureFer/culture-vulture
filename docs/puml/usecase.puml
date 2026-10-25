@@ -32,7 +32,7 @@ rectangle "CultureVulture" {
     usecase "Upravljanje profilima" as UC12
     usecase "Pregled detalja događaja" as UC13
     usecase "Filtriranje događaja" as UC14
-    usecase "Uređivanje komentara" as UC15
+    usecase "Brisanje komentara" as UC15
     usecase "Pregled vlastitih događaja" as UC16
 }
 
