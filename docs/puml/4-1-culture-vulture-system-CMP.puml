@@ -1,0 +1,67 @@
+' ==============================================================================
+' 4-1-culture-vulture-system-CMP.puml
+'
+' Svrha:    Prikazuje glavne komponente sustava CultureVulture, njihove ovisnosti i
+'           vanjske sustave s kojima komuniciraju (karta, TicketMaster).
+' Autor:    Karlo Cehulic, CultureVulture tim
+' AI:       Dijagram je izradio autor. Uz pomoc predloska iz GitHub repozitorija 
+'           Programskog Izenjerstva, AI nije koristen u uredivanju predloska.
+' Praćenje: Komponente treba uskladiti sa strukturom repozitorija i
+'           implementiranim uslugama; pri promjeni arhitekture ažurirati model.
+'
+' Diagram level: High-level logical architecture
+' Diagram type:  UML Component Diagram
+' Version:       1.0
+' ==============================================================================
+
+@startuml
+title Sustav CultureVulture – komponente
+left to right direction
+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam componentStyle rectangle
+skinparam ArrowColor #212529
+
+skinparam component {
+    BackgroundColor #E7F1FF
+    BorderColor #0D6EFD
+}
+
+skinparam database {
+    BackgroundColor #FFF3CD
+    BorderColor #212528
+}
+
+' ==============================================================================
+' Granica sustava i unutarnje komponente
+' ==============================================================================
+
+rectangle "Sustav CultureVulture" {
+  component "Web-klijent" as Web
+  rectangle "Poslužiteljska aplikacija" {
+    component "API za evente" as API
+    component "Usluga za evente" as Events
+  }
+  database "PostgreSQL" as DB
+}
+
+' ==============================================================================
+' Vanjski sustavi
+' ==============================================================================
+
+component "Pružatelj karte\n(vanjski)" as Maps
+component "TicketMaster API\n(vanjski)" as TM
+
+' ==============================================================================
+' Ovisnosti i sučelja
+' ==============================================================================
+
+Web --> API : zahtjevi i odgovori za prijave
+Web --> Maps : karta dogadaja
+API --> Events : podnošenje i dohvat prijava
+Events --> DB : pohrana i dohvat evenata
+Events --> TM : pohrana i dohvat evenata
+
+
+@enduml
