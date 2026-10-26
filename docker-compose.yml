@@ -1,0 +1,13 @@
+services:
+  psql:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: culturevultureuser
+      POSTGRES_DB: culturevulturedb
+      POSTGRES_PASSWORD: 4digitrsa
+    volumes:
+      - psql:/var/lib/postgresql
+    ports:
+      - 5432:5432
+volumes:
+  psql:
