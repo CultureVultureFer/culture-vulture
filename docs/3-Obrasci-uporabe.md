@@ -2,7 +2,7 @@
 
 ## Dijagram obrazaca uporabe
 
-![Dijagram obrazaca uporabe](images/usecase.svg)
+![Dijagram obrazaca uporabe](assets/diagrams/3-1-culture-vulture-UC.svg)
 
 ## Specifikacije obrazaca uporabe 
 
