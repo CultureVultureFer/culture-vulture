@@ -1,0 +1,78 @@
+@startuml 
+!pragma layout smetana
+left to right direction
+
+' Akteri
+actor Korisnik
+actor Organizator
+actor Administrator
+actor "Oauth 2.0" as OAuth <<external system>>
+actor "TicketMaster" as TicketMaster <<external system>>
+actor "Google Maps API" as Maps <<external system>>
+actor "Google Calendar API" as Calendar <<external system>>
+
+' Organizator može sve što može i korisnik, ali moze i objavljivati dogadaje
+Organizator --|> Korisnik
+
+' Administrator može sve što može i korisnik i organizator, ali može upravljati događajima i profilima
+Administrator --|> Organizator
+
+rectangle "CultureVulture" {
+    usecase "Registracija i prijava" as UC1
+    usecase "Komentiranje i recenzija" as UC2
+    usecase "Sortiranje događaja" as UC3
+    usecase "Dodavanje i brisanje događaja" as UC4
+    usecase "Prikaz lokacije na karti" as UC5
+    usecase "Pregled događaja u radijusu\ntrenutne lokacije" as UC6
+    usecase "Uređivanje profila" as UC7
+    usecase "Pretraživanje događaja" as UC8
+    usecase "Dodavanje događaja u kalendar" as UC9
+    usecase "Pregled događaja" as UC10
+    usecase "Upravljanje događajima" as UC11
+    usecase "Upravljanje profilima" as UC12
+    usecase "Pregled detalja događaja" as UC13
+    usecase "Filtriranje događaja" as UC14
+    usecase "Brisanje komentara" as UC15
+    usecase "Pregled vlastitih događaja" as UC16
+}
+
+' Neovisno o ulozi korisnika on se mora prijaviti u sustav
+Korisnik -- UC1
+UC1 -- OAuth
+
+' Vanjski API
+TicketMaster -- UC10
+Korisnik -- UC10 
+
+' povezivanje pregleda događaja
+UC10 <.. UC14 : <<extend>>
+UC14 <.. UC6 : <<extend>>
+UC10 <.. UC8 : <<extend>>
+UC10 ..> UC3 : <<include>>
+
+' Pregledavanje detalja događaja
+Korisnik -- UC13
+UC13 ..> UC5 : <<include>>
+UC13 <.. UC2 : <<extend>>
+UC2 <.. UC15 : <<extend>>
+UC13 <.. UC9 : <<extend>>
+
+' Uređivanje profila
+Korisnik -- UC7
+
+' Povezivanje s Google Maps API-jem
+Maps -- UC5
+Maps -- UC6
+
+' Povezivanje s Google Calendar API-jem
+Calendar -- UC9
+
+' Organizator ovlasti
+Organizator -- UC4
+Organizator -- UC16
+
+' Administrator ovlasti
+Administrator -- UC11
+Administrator -- UC12
+
+@enduml
