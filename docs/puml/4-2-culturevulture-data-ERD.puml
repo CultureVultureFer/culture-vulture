@@ -1,0 +1,97 @@
+' Initial version of ER diagram,
+' SESSIONS, and OAUTH_ACCOUNTS are likely to be reconfigured
+
+@startuml
+title CultureVulture
+left to right direction
+
+
+entity "USER" as user {
+   * user_id: ID <<PK>>
+   --
+   * username: text
+   * email: text
+   * created_at: datetime
+   * role_id: ID <<FK>>
+}
+
+entity "OAUTH_ACCOUNTS" as oauth_accounts {
+   * id: ID <<PK>>
+   --
+   * user_id: ID <<FK>>
+   * provider: text
+   * provider_user_id: text
+   access_token: text
+   refresh_token: text
+   token_expires_at: datetime
+   scope: text
+   token_type: text
+   created_at: datetime
+   updated_at: datetime
+}
+
+entity "SESSIONS" as sessions {
+   *id: ID <<PK>>
+   --
+   user_id: ID <<FK>>
+   session_token: text
+   expires_at: datetime
+   created_at: datetime
+}
+
+entity "ROLE" as role {
+   *role_id: ID <<PK>>
+   --
+   *role_name: text
+}
+
+entity "EVENT" as event {
+   *id: ID <<PK>>
+   --
+   *organizer_id: ID <<FK>>
+   *start: datetime
+   *end: datetime
+   *category_id: ID <<FK>>
+   *location: text
+   *latitude: decimal
+   *longitude: decimal
+   entry_price: float
+}
+
+entity "COMMENTS" as comments {
+   *id: ID <<PK>>
+   --
+   *event_id: ID <<FK>>
+   *user_id: ID <<FK>>
+   *time: datetime
+   *comment_text: text
+   *rating: int
+}
+
+entity "CATEGORY" as category {
+   *id: ID <<PK>>
+   --
+   *name: text
+}
+
+user ||--o{ oauth_accounts : HAS
+user ||--o{ sessions: HAS
+user }o--|| role: ASSIGNED
+user ||--o{ event: CREATES
+user ||--o{ comments: REVIEWS
+event ||--o{ comments: RECEIVES
+event }o--o{ category: IS_OF
+
+
+note left of user
+  Only users with the
+  Organizer role can
+  create events.
+end note
+
+note right of comments
+  Rating must be
+  1-5
+end note
+
+@enduml
