@@ -10,6 +10,7 @@ import '@fontsource/roboto/700.css';
 import HelloWorld from "./HelloWorld.jsx"
 import './index.css'
 import App from './App.jsx'
+import Register from "./pages/Register"
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="hello" element={<HelloWorld />} />
+        <Route path="register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
