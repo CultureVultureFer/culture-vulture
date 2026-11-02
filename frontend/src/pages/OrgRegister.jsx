@@ -2,8 +2,8 @@ import { Button, Grid, TextField } from "@mui/material";
 import { Link } from "react-router"
 import { Controller, useForm } from "react-hook-form";
 
-function TextInput({ error, label, ...field }) {
-  return <TextField error={!!error} helperText={error?.message} label={label} variant="standard" size="small" {...field} />
+function TextInput({ error, label, type = "text", ...field }) {
+  return <TextField type={type} error={!!error} helperText={error?.message} label={label} variant="standard" size="small" {...field} />
 }
 
 function OrgRegister() {
@@ -26,16 +26,49 @@ function OrgRegister() {
         <h1 className="text-blue-700 text-center">Organizator Sign Up</h1>
         <Controller rules={{ required: "Organization name is required" }} name="name" control={control} render={
           ({ field }) => <TextInput error={errors.name} label="Organization name" {...field} ></TextInput>} />
-        <Controller rules={{ required: "Organization email is required" }} name="email" control={control} render={
-          ({ field }) => <TextInput error={errors.email} label="Organization email" {...field} />} />
-        <Controller rules={{ required: "Organization password is required" }} name="password" control={control} render={
-          ({ field }) => <TextInput error={errors.password} label="Password" {...field} />} />
-        <Controller rules={{ required: "Organization password confirmation is required" }} name="passwordrepeated" control={control} render={
+        <Controller rules={{
+          required: "Organization email is required",
+          validate: {
+            isEmail: (email) => {
+              const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!email.match(pattern)) return "Please provide a valid email"
+            }
+          }
+        }} name="email" control={control} render={
+          ({ field }) => <TextInput error={errors.email} label="Organization email" type="email" {...field} />} />
+        <Controller rules={{
+          required: "Organization password is required",
+          validate: {
+            strongEnoguh: (password) => {
+              const uppercase = /[A-Z]/.test(password);
+              const lowercase = /[a-z]/.test(password);
+              const special = /[@$!%*#?&]/.test(password);
+              const digit = /\d/.test(password);
+              const long = password.length >= 8;
+              if (!long) return "Password must be at least 8 characters long"
+              if (!uppercase) return "Password must contain at least one uppercase letter"
+              if (!lowercase) return "Password must contain at least one lowercase letter"
+              if (!special) return "Password must contain at least one speccial letter (@,$,!...)"
+              if (!digit) return "Password must contain at least one number"
+            }
+          }
+        }} name="password" control={control} render={
+          ({ field }) => <TextInput error={errors.password} label="Password" type="password" {...field} />} />
+        <Controller rules={{
+          required: "Organization password confirmation is required",
+          validate: {
+            passwordsMatch: (passwordrepeated, { password }) => {
+              if (passwordrepeated != password) {
+                return "Passwords must match"
+              }
+            }
+          }
+        }} name="passwordrepeated" control={control} render={
           ({ field }) => <TextInput error={errors.passwordrepeated}
-            label="Password confirmation" {...field} />} />
+            label="Password confirmation" type="password" {...field} />} />
         <Grid container>
           <Grid size={8}>
-            <Link className="text-xs text-blue-500 underline" to="/org/signin">Already have an account? Sign In here</Link>
+            <Link className="text-xs text-blue-500 underline" to="/org/signin">Already have an account? Sign In here...</Link>
           </Grid>
           <Grid offset={"auto"}>
             <Button type="submit" sx={{ backgroundColor: "var(--color-blue-500)", color: "white" }} color="primary" className="self-end bg-blue-50">Sign Up</Button>
