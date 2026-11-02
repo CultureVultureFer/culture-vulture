@@ -1,12 +1,18 @@
 import { Button, Grid, TextField } from "@mui/material";
-import { Link } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { Controller, useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
 
 function TextInput({ error, label, type = "text", ...field }) {
   return <TextField type={type} error={!!error} helperText={error?.message} label={label} variant="standard" size="small" {...field} />
 }
 
+const mockedOkRequest = () => new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 2000))
+const mockedErrorRequest = () => new Promise((_, reject) => setTimeout(() => reject({ error: true, message: "Org with that name already exists" }), 2000))
+
 function OrgRegister() {
+  const navigate = useNavigate();
+  const mutation = useMutation({ mutationFn: mockedOkRequest, onSuccess: () => navigate("/hello") })
   const { handleSubmit, formState: { errors }, control } = useForm({
     defaultValues: {
       name: "",
@@ -17,13 +23,14 @@ function OrgRegister() {
   });
 
   const onSubmit = (data) => {
-    console.log(data)
+    mutation.mutate(data)
   }
 
   return (
     <div className="flex flex-col gap-2 items-center justify-center self-center h-screen">
-      <form onSubmit={handleSubmit(onSubmit)} className="text-xl justify-center bg-white border-blue-700 border-2 flex flex-col gap-5 p-5 shadow-blue-300 shadow-md w-100 rounded-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="text-xl justify-center content-center bg-white border-blue-700 border-2 flex flex-col gap-5 p-5 shadow-blue-300 shadow-md w-100 rounded-md">
         <h1 className="text-blue-700 text-center">Organizator Sign Up</h1>
+        {true && <p className="text-red-600 self-center text-sm p-2 border-red-400 border-2 rounded-md shadow-red-300 shadow-sm">An error occured... Please try again</p>}
         <Controller rules={{ required: "Organization name is required" }} name="name" control={control} render={
           ({ field }) => <TextInput error={errors.name} label="Organization name" {...field} ></TextInput>} />
         <Controller rules={{
@@ -71,7 +78,7 @@ function OrgRegister() {
             <Link className="text-xs text-blue-500 underline" to="/org/signin">Already have an account? Sign In here...</Link>
           </Grid>
           <Grid offset={"auto"}>
-            <Button type="submit" sx={{ backgroundColor: "var(--color-blue-500)", color: "white" }} color="primary" className="self-end bg-blue-50">Sign Up</Button>
+            <Button loading={mutation.isPending} type="submit" sx={{ backgroundColor: "var(--color-blue-500)", color: "white" }} color="primary" className="self-end bg-blue-50">Sign Up</Button>
           </Grid>
         </Grid>
         <Link to="/signup" className="text-sm text-blue-500 underline">Looking for normal user sign up?</Link>
