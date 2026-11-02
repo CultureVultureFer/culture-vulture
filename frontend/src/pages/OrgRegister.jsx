@@ -2,6 +2,11 @@ import { Button, Grid, TextField } from "@mui/material";
 import { Link, useNavigate } from "react-router";
 import { Controller, useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
+import {
+  isEmail,
+  passwordMatch,
+  passwordStrongEnough,
+} from "../utils/validation";
 
 function TextInput({ error, label, type = "text", ...field }) {
   return (
@@ -79,11 +84,7 @@ function OrgRegister() {
           rules={{
             required: "Organization email is required",
             validate: {
-              isEmail: (email) => {
-                const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!email.match(pattern))
-                  return "Please provide a valid email";
-              },
+              isEmail: isEmail,
             },
           }}
           name="email"
@@ -101,21 +102,7 @@ function OrgRegister() {
           rules={{
             required: "Organization password is required",
             validate: {
-              strongEnoguh: (password) => {
-                const uppercase = /[A-Z]/.test(password);
-                const lowercase = /[a-z]/.test(password);
-                const special = /[@$!%*#?&]/.test(password);
-                const digit = /\d/.test(password);
-                const long = password.length >= 8;
-                if (!long) return "Password must be at least 8 characters long";
-                if (!uppercase)
-                  return "Password must contain at least one uppercase letter";
-                if (!lowercase)
-                  return "Password must contain at least one lowercase letter";
-                if (!special)
-                  return "Password must contain at least one speccial letter (@,$,!...)";
-                if (!digit) return "Password must contain at least one number";
-              },
+              passwordStrongEnough: passwordStrongEnough,
             },
           }}
           name="password"
@@ -133,11 +120,7 @@ function OrgRegister() {
           rules={{
             required: "Organization password confirmation is required",
             validate: {
-              passwordsMatch: (passwordrepeated, { password }) => {
-                if (passwordrepeated != password) {
-                  return "Passwords must match";
-                }
-              },
+              passwordsMatch: passwordMatch,
             },
           }}
           name="passwordrepeated"
