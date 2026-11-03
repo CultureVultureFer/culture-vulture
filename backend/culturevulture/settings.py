@@ -10,11 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 from os import getenv
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# F-001: tajne (Google client secret) čitamo iz backend/.env, koji NE ide u git.
+# Predložak je backend/.env.example.
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # F-001
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -130,3 +139,48 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+# ------------------------------------------------------------------------------
+# F-001: korisnici, sesije i prijava
+# ------------------------------------------------------------------------------
+
+# Vlastiti model korisnika (accounts.User). Mora biti postavljen PRIJE prve
+# migracije. Tko je ranije pokrenuo `migrate` bez ovoga, mora resetirati
+# lokalnu bazu:  docker compose down -v  &&  docker compose up -d
+AUTH_USER_MODEL = 'accounts.User'
+
+# Prijavljenost se pamti u Django sesiji (tablica django_session) i kolačiću
+# `sessionid`. Zato ERD-ova tablica SESSIONS nije potrebna.
+#  - HttpOnly: JavaScript ne može pročitati kolačić, pa ga ni XSS ne može ukrasti.
+#  - Ne koristimo JWT u localStorageu: XSS bi ga mogao ukrasti, a odjava
+#    (poništavanje tokena) je kompliciranija. JWT ima smisla tek ako isti API
+#    zovu i mobilna aplikacija ili vanjski klijenti.
+SESSION_COOKIE_HTTPONLY = True
+# Lax, ne Strict: povratak s Googlea (/google/callback/) je navigacija s druge
+# domene. Uz Strict preglednik ne bi poslao kolačić, Django ne bi našao
+# spremljeni `state` i Google prijava bi uvijek pala.
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 dana
+SESSION_COOKIE_SECURE = not DEBUG       # u produkciji samo preko HTTPS-a
+
+# React čita `csrftoken` i šalje ga u X-CSRFToken headeru, pa ovaj kolačić
+# NIJE HttpOnly. To je u redu: CSRF token dokazuje da zahtjev dolazi s naše
+# stranice, on nije tajna koju štitimo od JavaScripta.
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+
+# Kamo backend vraća korisnika nakon Google prijave.
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
+# Google OpenID Connect. Vrijednosti se upisuju u backend/.env.
+OIDC_GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configuration'
+OIDC_GOOGLE_CLIENT_ID = os.environ.get('OIDC_GOOGLE_CLIENT_ID', '')
+OIDC_GOOGLE_CLIENT_SECRET = os.environ.get('OIDC_GOOGLE_CLIENT_SECRET', '')
+# Mora se znak po znak podudarati s "Authorized redirect URI" u Google Cloud
+# Consoleu. Ide preko Vite proxyja (5173) da kolačići budu na istom originu.
+OIDC_GOOGLE_REDIRECT_URI = os.environ.get(
+    'OIDC_GOOGLE_REDIRECT_URI', 'http://localhost:5173/api/auth/google/callback/'
+)
