@@ -62,27 +62,27 @@ function OrgRegister() {
         onSubmit={handleSubmit(onSubmit)}
         className="text-xl justify-center content-center bg-white border-blue-700 border-2 flex flex-col gap-5 p-5 shadow-blue-300 shadow-md w-100 rounded-md"
       >
-        <h1 className="text-blue-700 text-center">Organizator Sign Up</h1>
+        <h1 className="text-blue-700 text-center">Organizator Registration</h1>
         {mutation.isError && (
           <p className="text-red-600 self-center text-sm p-2 border-red-400 border-2 rounded-md shadow-red-300 shadow-sm">
             An error occured... Please try again
           </p>
         )}
         <Controller
-          rules={{ required: "Organization name is required" }}
+          rules={{ required: "Organizator name is required" }}
           name="name"
           control={control}
           render={({ field }) => (
             <TextInput
               error={errors.name}
-              label="Organization name"
+              label="Organizator name"
               {...field}
             ></TextInput>
           )}
         />
         <Controller
           rules={{
-            required: "Organization email is required",
+            required: "Organizator email is required",
             validate: {
               isEmail: isEmail,
             },
@@ -92,7 +92,7 @@ function OrgRegister() {
           render={({ field }) => (
             <TextInput
               error={errors.email}
-              label="Organization email"
+              label="Organizator email"
               type="email"
               {...field}
             />
@@ -100,7 +100,7 @@ function OrgRegister() {
         />
         <Controller
           rules={{
-            required: "Organization password is required",
+            required: "Organizator password is required",
             validate: {
               passwordStrongEnough: passwordStrongEnough,
             },
@@ -118,7 +118,7 @@ function OrgRegister() {
         />
         <Controller
           rules={{
-            required: "Organization password confirmation is required",
+            required: "Organizator password confirmation is required",
             validate: {
               passwordsMatch: passwordMatch,
             },
@@ -136,8 +136,8 @@ function OrgRegister() {
         />
         <Grid container>
           <Grid size={8}>
-            <Link className="text-xs text-blue-500 underline" to="/org/signin">
-              Already have an account? Sign In here...
+            <Link className="text-xs text-blue-500 underline" to="/org/login">
+              Already have an account? Log In here...
             </Link>
           </Grid>
           <Grid offset={"auto"}>
