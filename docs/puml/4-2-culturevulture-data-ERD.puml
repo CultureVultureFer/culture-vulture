@@ -1,5 +1,6 @@
 ' Initial version of ER diagram,
 ' SESSIONS, and OAUTH_ACCOUNTS are likely to be reconfigured
+' Version: 1.1
 
 @startuml
 title CultureVulture
