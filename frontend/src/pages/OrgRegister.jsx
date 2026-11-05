@@ -1,0 +1,163 @@
+import { Button, Grid, TextField } from "@mui/material";
+import { Link, useNavigate } from "react-router";
+import { Controller, useForm } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import {
+  isEmail,
+  passwordMatch,
+  passwordStrongEnough,
+} from "../utils/validation";
+
+function TextInput({ error, label, type = "text", ...field }) {
+  return (
+    <TextField
+      type={type}
+      error={!!error}
+      helperText={error?.message}
+      label={label}
+      variant="standard"
+      size="small"
+      {...field}
+    />
+  );
+}
+
+const mockedOkRequest = () =>
+  new Promise((resolve) => setTimeout(() => resolve({ ok: true }), 2000));
+const mockedErrorRequest = () =>
+  new Promise((_, reject) =>
+    setTimeout(
+      () =>
+        reject({ error: true, message: "Org with that name already exists" }),
+      2000,
+    ),
+  );
+
+function OrgRegister() {
+  const navigate = useNavigate();
+  const mutation = useMutation({
+    mutationFn: mockedOkRequest,
+    onSuccess: () => navigate("/hello"),
+  });
+  const {
+    handleSubmit,
+    formState: { errors },
+    control,
+  } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      passwordrepeated: "",
+    },
+  });
+
+  const onSubmit = (data) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <div className="flex flex-col gap-2 items-center justify-center self-center h-screen">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="text-xl justify-center content-center bg-white border-blue-700 border-2 flex flex-col gap-5 p-5 shadow-blue-300 shadow-md w-100 rounded-md"
+      >
+        <h1 className="text-blue-700 text-center">Organizator Registration</h1>
+        {mutation.isError && (
+          <p className="text-red-600 self-center text-sm p-2 border-red-400 border-2 rounded-md shadow-red-300 shadow-sm">
+            An error occured... Please try again
+          </p>
+        )}
+        <Controller
+          rules={{ required: "Organizator name is required" }}
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              error={errors.name}
+              label="Organizator name"
+              {...field}
+            ></TextInput>
+          )}
+        />
+        <Controller
+          rules={{
+            required: "Organizator email is required",
+            validate: {
+              isEmail: isEmail,
+            },
+          }}
+          name="email"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              error={errors.email}
+              label="Organizator email"
+              type="email"
+              {...field}
+            />
+          )}
+        />
+        <Controller
+          rules={{
+            required: "Organizator password is required",
+            validate: {
+              passwordStrongEnough: passwordStrongEnough,
+            },
+          }}
+          name="password"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              error={errors.password}
+              label="Password"
+              type="password"
+              {...field}
+            />
+          )}
+        />
+        <Controller
+          rules={{
+            required: "Organizator password confirmation is required",
+            validate: {
+              passwordsMatch: passwordMatch,
+            },
+          }}
+          name="passwordrepeated"
+          control={control}
+          render={({ field }) => (
+            <TextInput
+              error={errors.passwordrepeated}
+              label="Password confirmation"
+              type="password"
+              {...field}
+            />
+          )}
+        />
+        <Grid container>
+          <Grid size={8}>
+            <Link className="text-xs text-blue-500 underline" to="/org/login">
+              Already have an account? Log In here...
+            </Link>
+          </Grid>
+          <Grid offset={"auto"}>
+            <Button
+              loading={mutation.isPending}
+              type="submit"
+              sx={{ backgroundColor: "var(--color-blue-500)", color: "white" }}
+              color="primary"
+              className="self-end bg-blue-50"
+            >
+              Sign Up
+            </Button>
+          </Grid>
+        </Grid>
+        <Link to="/signup" className="text-sm text-blue-500 underline">
+          Looking for normal user sign up?
+        </Link>
+      </form>
+    </div>
+  );
+}
+
+export default OrgRegister;
