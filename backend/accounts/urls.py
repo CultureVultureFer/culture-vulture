@@ -10,5 +10,4 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("google/login/", views.google_login_view, name="google-login"),
     path("google/callback/", views.google_callback_view, name="google-callback"),
-    path("register/organizer/", views.register_organizer_view, name="register-organizer"),
 ]

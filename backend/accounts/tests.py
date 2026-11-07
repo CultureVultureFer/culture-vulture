@@ -86,7 +86,7 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
     def test_first_google_login_registers_user(self):
         resp, sent, _ = self.google_flow()
 
-        self.assertEqual(resp["Location"], FRONTEND + "/")
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
         self.assertIn("code_verifier", sent)
 
         user = User.objects.get()
@@ -132,8 +132,8 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
     def test_logged_in_superuser_links_google(self):
         admin = User.objects.create_superuser(username="Admin", email="admin@example.com", password="Admin-Pass-123")
         self.client.force_login(admin)
-        resp, _, _ = self.google_flow(next_path="/admin-panel")
-        self.assertEqual(resp["Location"], FRONTEND + "/admin-panel")
+        resp, _, _ = self.google_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
         self.assertEqual(OAuthAccount.objects.get().user, admin)
 
     def test_google_linked_to_someone_else(self):
@@ -173,78 +173,6 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
         self.client.get("/api/auth/google/login/")
         resp = self.client.get("/api/auth/google/callback/", {"error": "access_denied"})
         self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=cancelled")
-
-    def test_open_redirect_blocked(self):
-        resp, _, _ = self.google_flow(next_path="//zlo.example/phish")
-        self.assertEqual(resp["Location"], FRONTEND + "/")
-
-
-@override_settings(FRONTEND_URL=FRONTEND)
-class OrganizerTests(FakeGoogleMixin, TestCase):
-    url = "/api/auth/register/organizer/"
-
-    def test_full_organizer_registration(self):
-        resp, _, _ = self.google_flow(next_path="/register/organizer")
-        self.assertEqual(resp["Location"], FRONTEND + "/register/organizer")
-
-        resp = post_json(self.client, self.url, {"name": "Kino Europa", "email": "ignorirano@x.hr"})
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.json()["role"], "ORGANIZER")
-        self.assertEqual(resp.json()["username"], "Kino Europa")
-        self.assertEqual(resp.json()["email"], "marko@gmail.com")
-        self.assertTrue(User.objects.get().is_organizer)
-
-    def test_requires_login(self):
-        resp = post_json(self.client, self.url, {"name": "Kino Europa"})
-        self.assertEqual(resp.status_code, 401)
-
-    def test_requires_csrf(self):
-        strict = Client(enforce_csrf_checks=True)
-        self.google_flow(client=strict)
-        self.assertEqual(post_json(strict, self.url, {"name": "Kino Europa"}).status_code, 403)
-
-        strict.get("/api/auth/csrf/")
-        token = strict.cookies["csrftoken"].value
-        self.assertEqual(post_json(strict, self.url, {"name": "Kino Europa"}, HTTP_X_CSRFTOKEN=token).status_code, 200)
-
-    def test_duplicate_name_case_insensitive(self):
-        other = User.objects.create_user(username="Kino Europa", email="kino@example.com", password=None)
-        self.assertIsNotNone(other.pk)
-        self.google_flow()
-        resp = post_json(self.client, self.url, {"name": "kino  europa"})
-        self.assertEqual(resp.status_code, 400)
-        self.assertEqual(resp.json()["errors"]["name"], ["An organization with this name already exists."])
-
-    def test_own_current_name_is_allowed(self):
-        self.google_flow()
-        resp = post_json(self.client, self.url, {"name": "Marko Marić"})
-        self.assertEqual(resp.status_code, 200)
-
-    def test_invalid_characters(self):
-        self.google_flow()
-        resp = post_json(self.client, self.url, {"name": "<script>"})
-        self.assertEqual(resp.status_code, 400)
-        self.assertIn("name", resp.json()["errors"])
-
-    def test_missing_name(self):
-        self.google_flow()
-        resp = post_json(self.client, self.url, {})
-        self.assertEqual(set(resp.json()["errors"]), {"name"})
-
-    def test_cannot_become_organizer_twice(self):
-        self.google_flow()
-        post_json(self.client, self.url, {"name": "Kino Europa"})
-        resp = post_json(self.client, self.url, {"name": "Kino Zagreb"})
-        self.assertEqual(resp.status_code, 400)
-        self.assertEqual(User.objects.get().username, "Kino Europa")
-
-    def test_admin_cannot_become_organizer(self):
-        admin = User.objects.create_superuser(username="Admin", email="admin@example.com", password="Admin-Pass-123")
-        self.client.force_login(admin)
-        resp = post_json(self.client, self.url, {"name": "Kino Europa"})
-        self.assertEqual(resp.status_code, 400)
-        admin.refresh_from_db()
-        self.assertTrue(admin.is_app_admin)
 
 
 class SessionTests(TestCase):

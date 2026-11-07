@@ -5,21 +5,6 @@ from django.db import IntegrityError, transaction
 
 from .models import OAuthAccount, Role, User
 
-class OrganizerError(Exception):
-    pass
-
-
-def become_organizer(user: User, organization_name: str) -> User:
-    if user.role.name != Role.USER:
-        raise OrganizerError(f"Account already has the role {user.role.name}.")
-
-    with transaction.atomic():
-        user.username = organization_name
-        user.role = Role.get(Role.ORGANIZER)
-        user.save(update_fields=["username", "role"])
-    return user
-
-
 class GoogleLoginError(Exception):
     def __init__(self, code: str):
         super().__init__(code)
