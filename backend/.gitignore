@@ -1,6 +1,6 @@
-# Tajne (Google client secret)
+# Secrets (Google client secret)
 .env
-# uv virtualno okruženje
+# uv virtual environment
 .venv/
 __pycache__/
 *.pyc

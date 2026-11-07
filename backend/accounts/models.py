@@ -10,9 +10,9 @@ class Role(models.Model):
     ORGANIZER = "ORGANIZER"
     ADMIN = "ADMIN"
     NAME_CHOICES = [
-        (USER, "Korisnik"),
-        (ORGANIZER, "Organizator"),
-        (ADMIN, "Administrator"),
+        (USER, "User"),
+        (ORGANIZER, "Organizer"),
+        (ADMIN, "Admin"),
     ]
 
     name = models.CharField(max_length=20, unique=True, choices=NAME_CHOICES)
