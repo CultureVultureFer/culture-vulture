@@ -1,14 +1,3 @@
-"""
-Testovi za F-001 (prijava i registracija samo preko Googlea).
-
-Pokretanje (iz backend/, uz pokrenut `docker compose up -d`):
-    uv run python manage.py test accounts
-
-Google se testira s lažnim OIDC providerom: vlastiti RSA ključ, JWKS i
-potpisan id_token. Authlib pritom radi PRAVU provjeru potpisa, state, nonce,
-aud, iss i PKCE, pa testovi ne trebaju internet ni Google.
-"""
-
 import json
 import time
 from unittest import mock
@@ -25,7 +14,6 @@ FRONTEND = "http://localhost:5173"
 
 ISSUER = "https://accounts.google.com"
 CLIENT_ID = "test-client-id"
-# joserfc dolazi s Authlibom (Authlib ga koristi za provjeru id_tokena).
 _KEY = RSAKey.generate_key(2048, parameters={"kid": "test", "use": "sig", "alg": "RS256"})
 FAKE_METADATA = {
     "issuer": ISSUER,
@@ -33,7 +21,7 @@ FAKE_METADATA = {
     "token_endpoint": "https://oauth2.googleapis.com/token",
     "jwks_uri": "https://www.googleapis.com/oauth2/v3/certs",
     "jwks": {"keys": [_KEY.as_dict(private=False)]},
-    "_loaded_at": time.time(),  # Authlib tada ne ide na mrežu
+    "_loaded_at": time.time(),
 }
 
 
@@ -53,8 +41,6 @@ def post_json(client, url, data, **extra):
 
 
 class FakeGoogleMixin:
-    """Zamijeni Googleove adrese i ključeve lažnima za vrijeme testa."""
-
     def setUp(self):
         super().setUp()
         self._saved = (google.client_id, dict(google.server_metadata))
@@ -69,7 +55,6 @@ class FakeGoogleMixin:
         super().tearDown()
 
     def google_flow(self, client=None, next_path=None, state=None, **claims):
-        """login -> (lažni Google) -> callback. Vraća (odgovor callbacka, poslano token endpointu, parametri)."""
         client = client or self.client
         url = "/api/auth/google/login/" + (f"?next={next_path}" if next_path else "")
         resp = client.get(url)
@@ -89,10 +74,6 @@ class FakeGoogleMixin:
         return resp, sent, params
 
 
-# ==============================================================================
-# Registracija i prijava Googleom
-# ==============================================================================
-
 @override_settings(FRONTEND_URL=FRONTEND)
 class GoogleLoginTests(FakeGoogleMixin, TestCase):
     def test_redirect_to_google_has_state_nonce_pkce(self):
@@ -106,13 +87,13 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
         resp, sent, _ = self.google_flow()
 
         self.assertEqual(resp["Location"], FRONTEND + "/")
-        self.assertIn("code_verifier", sent)  # PKCE
+        self.assertIn("code_verifier", sent)
 
         user = User.objects.get()
         self.assertEqual(user.email, "marko@gmail.com")
         self.assertEqual(user.username, "Marko Marić")
         self.assertEqual(user.role.name, Role.USER)
-        self.assertFalse(user.has_usable_password())  # nema lozinke
+        self.assertFalse(user.has_usable_password())
 
         account = OAuthAccount.objects.get()
         self.assertEqual((account.provider, account.provider_user_id), ("google", "google-sub-1"))
@@ -198,25 +179,19 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
         self.assertEqual(resp["Location"], FRONTEND + "/")
 
 
-# ==============================================================================
-# Organizator: Google prijava + naziv organizacije
-# ==============================================================================
-
 @override_settings(FRONTEND_URL=FRONTEND)
 class OrganizerTests(FakeGoogleMixin, TestCase):
     url = "/api/auth/register/organizer/"
 
     def test_full_organizer_registration(self):
-        # 1. Google prijava s povratkom na stranicu za organizatore
         resp, _, _ = self.google_flow(next_path="/register/organizer")
         self.assertEqual(resp["Location"], FRONTEND + "/register/organizer")
 
-        # 2. Karlov obrazac šalje naziv (ostala polja se ignoriraju)
         resp = post_json(self.client, self.url, {"name": "Kino Europa", "email": "ignorirano@x.hr"})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["role"], "ORGANIZER")
         self.assertEqual(resp.json()["username"], "Kino Europa")
-        self.assertEqual(resp.json()["email"], "marko@gmail.com")  # email s Googlea
+        self.assertEqual(resp.json()["email"], "marko@gmail.com")
         self.assertTrue(User.objects.get().is_organizer)
 
     def test_requires_login(self):
@@ -272,10 +247,6 @@ class OrganizerTests(FakeGoogleMixin, TestCase):
         self.assertTrue(admin.is_app_admin)
 
 
-# ==============================================================================
-# Sesija, uklonjeni endpointi, uloge
-# ==============================================================================
-
 class SessionTests(TestCase):
     def test_me_anonymous(self):
         self.assertEqual(self.client.get("/api/auth/me/").status_code, 401)
@@ -290,7 +261,6 @@ class SessionTests(TestCase):
         self.assertEqual(self.client.get("/api/auth/logout/").status_code, 405)
 
     def test_password_endpoints_do_not_exist(self):
-        # Registracija i prijava lozinkom namjerno ne postoje.
         body = {"email": "ana@example.com", "password": "Kultura-2026!", "username": "ana"}
         self.assertEqual(post_json(self.client, "/api/auth/login/", body).status_code, 404)
         self.assertEqual(post_json(self.client, "/api/auth/register/", body).status_code, 404)

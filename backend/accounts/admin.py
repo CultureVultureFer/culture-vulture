@@ -12,8 +12,6 @@ class RoleAdmin(admin.ModelAdmin):
 class OAuthAccountInline(admin.TabularInline):
     model = OAuthAccount
     extra = 0
-    # Tokene ne prikazujemo: admin ih ne treba vidjeti, a ekran admina je
-    # lako slučajno podijeliti (screenshot, screen share).
     fields = ("provider", "provider_user_id", "created_at", "updated_at")
     readonly_fields = fields
     can_delete = True
