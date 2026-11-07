@@ -5,12 +5,16 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
+import { loginWithGoogle } from "./api/auth";
 
 function HelloWorld() {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
+          DEV ONLY!!! For us to make sure OIDC is configured before adding more
+          logic
+          <button onClick={loginWithGoogle}>Log in with Google...</button>
           <IconButton
             size="large"
             edge="start"
