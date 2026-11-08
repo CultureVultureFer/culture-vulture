@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+from os import getenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,11 +76,11 @@ WSGI_APPLICATION = 'culturevulture.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "culturevulturedb",
-        "USER": "culturevultureuser",
-        "PASSWORD": "4digitrsa",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": getenv("POSTGRES_DB"),
+        "USER": getenv("POSTGRES_USER"),
+        "PASSWORD": getenv("POSTGRES_PASSWORD"),
+        "HOST": getenv("POSTGRES_HOST"),
+        "PORT": getenv("POSTGRES_PORT"),
     }
 }
 

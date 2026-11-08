@@ -9,5 +9,57 @@ services:
       - psql:/var/lib/postgresql
     ports:
       - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  backend:
+    build:
+      context: ./backend/
+      # Build the development stage from the multi-stage Dockerfile.
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      # Enable Django's verbose debug error pages (the dev server always auto-reloads).
+      DEBUG: 1
+      # Database connection settings passed to Django via environment variables.
+      POSTGRES_USER: culturevultureuser
+      POSTGRES_DB: culturevulturedb
+      POSTGRES_PASSWORD: 4digitrsa
+      POSTGRES_HOST: psql
+      POSTGRES_PORT: 5432
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_EMAIL: admin@example.com
+      DJANGO_SUPERUSER_PASSWORD: admin
+    env_file:
+      - path: ./backend/.env
+        required: false
+    command: >
+      sh -c "python manage.py migrate &&
+             { python manage.py createsuperuser --noinput || true; } &&
+             python manage.py runserver 0.0.0.0:8000"
+    # Wait for the database to pass its healthcheck before starting the web service.
+    depends_on:
+      psql:
+        condition: service_healthy
+    develop:
+      watch:
+        # Sync source file changes directly into the container so Django's
+        # dev server can reload them without a full image rebuild.
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - __pycache__/
+            - "*.pyc"
+            - .git/
+            - .venv/
+        # Rebuild the image when dependencies change.
+        - action: rebuild
+          path: pyproject.toml
+        - action: rebuild
+          path: uv.lock
 volumes:
   psql:
