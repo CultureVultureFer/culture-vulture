@@ -1,5 +1,6 @@
 ' Initial version of ER diagram,
 ' SESSIONS, and OAUTH_ACCOUNTS are likely to be reconfigured
+' Version: 1.1
 
 @startuml
 title CultureVulture
@@ -64,8 +65,8 @@ entity "COMMENTS" as comments {
    *event_id: ID <<FK>>
    *user_id: ID <<FK>>
    *time: datetime
-   *comment_text: text
    *rating: int
+   comment_text: text
 }
 
 entity "CATEGORY" as category {
@@ -93,5 +94,11 @@ note right of comments
   Rating must be
   1-5
 end note
+
+note right of comments
+   Comment_text is optional,
+   user may only give number rating.
+end note
+
 
 @enduml
