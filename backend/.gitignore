@@ -1,0 +1,6 @@
+# Secrets (Google client secret)
+.env
+# uv virtual environment
+.venv/
+__pycache__/
+*.pyc

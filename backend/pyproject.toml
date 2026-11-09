@@ -5,6 +5,22 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "authlib>=1.9.3",
     "django>=6.1.2",
     "psycopg[binary]>=3.3.6",
+    "python-dotenv>=1.2.4",
+    "requests>=2.34.2",
 ]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.40.2",
+    "django-stubs>=6.1.2",
+]
+
+[tool.basedpyright]
+    exclude = ["**/.venv", "**/migrations"]
+    pythonVersion = "3.14"
+    typeCheckingMode = "basic"
+    venvPath = "."
+    venv = ".venv"
