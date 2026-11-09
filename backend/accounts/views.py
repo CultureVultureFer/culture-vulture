@@ -14,7 +14,7 @@ MODEL_BACKEND = "django.contrib.auth.backends.ModelBackend"
 # Will be changed later, when we decide where users should be rerouted after login
 FRONTEND_REDIRECT_PATH = "/hello"
 
-def user_payload(user) -> dict:
+def user_payload(user):
     return {
         "id": user.pk,
         "username": user.username,
@@ -23,14 +23,14 @@ def user_payload(user) -> dict:
     }
 
 
-def _errors(errors: dict, status: int = 400) -> JsonResponse:
+def _errors(errors, status=400):
     return JsonResponse({"errors": errors}, status=status)
 
 
-def _not_logged_in() -> JsonResponse:
+def _not_logged_in():
     return _errors({"__all__": ["Not logged in."]}, status=401)
 
-def _frontend_redirect(path: str = "/", **params) -> HttpResponseRedirect:
+def _frontend_redirect(path="/", **params):
     url = settings.FRONTEND_URL.rstrip("/") + path
     if params:
         url += "?" + urlencode(params)

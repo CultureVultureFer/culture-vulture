@@ -35,7 +35,7 @@ def make_id_token(nonce, **claims):
     return jwt.encode({"alg": "RS256", "kid": "test"}, payload, _KEY)
 
 
-class FakeGoogleMixin:
+class FakeGoogleMixin(TestCase):
     def setUp(self):
         super().setUp()
         self._saved = (google.client_id, dict(google.server_metadata))

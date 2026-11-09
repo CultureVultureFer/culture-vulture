@@ -6,12 +6,12 @@ from django.db import IntegrityError, transaction
 from .models import Role, User
 
 class GoogleLoginError(Exception):
-    def __init__(self, code: str):
+    def __init__(self, code):
         super().__init__(code)
         self.code = code
 
 
-def login_with_google(claims: dict, token: dict, current_user=None) -> User:
+def login_with_google(claims, token, current_user=None):
     subject = claims.get("sub")
     if not subject:
         raise GoogleLoginError("invalid_token")
@@ -50,7 +50,7 @@ def login_with_google(claims: dict, token: dict, current_user=None) -> User:
     return user
 
 
-def _unique_username(claims: dict, email: str) -> str:
+def _unique_username(claims, email):
     base = claims.get("name") or claims.get("given_name") or email.split("@")[0]
     base = re.sub(r"[^\w .,'&()+-]", "", base).strip()[:140] or "user"
     candidate, n = base, 1

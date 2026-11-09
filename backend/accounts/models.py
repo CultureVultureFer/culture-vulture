@@ -23,7 +23,7 @@ class Role(models.Model):
         return self.get_name_display()
 
     @classmethod
-    def get(cls, name: str) -> "Role":
+    def get(cls, name):
         return cls.objects.get(name=name)
 
 
@@ -70,9 +70,9 @@ class User(AbstractUser):
         ]
 
     @property
-    def is_organizer(self) -> bool:
+    def is_organizer(self):
         return self.role.name == Role.ORGANIZER
 
     @property
-    def is_app_admin(self) -> bool:
+    def is_app_admin(self):
         return self.role.name == Role.ADMIN
