@@ -42,8 +42,6 @@ def login_with_google(claims, current_user=None):
                 email=email,
                 password=None,
                 role=Role.get(Role.USER),
-                first_name=(claims.get("given_name") or "")[:150],
-                last_name=(claims.get("family_name") or "")[:150],
             )
     except IntegrityError:
         raise GoogleLoginError("email_exists")
