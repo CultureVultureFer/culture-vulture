@@ -24,7 +24,8 @@ class Role(models.Model):
 
     @classmethod
     def get(cls, name):
-        return cls.objects.get(name=name)
+        role, _ = cls.objects.get_or_create(name=name)
+        return role
 
 
 class UserManager(DjangoUserManager):
