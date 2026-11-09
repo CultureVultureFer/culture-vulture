@@ -11,7 +11,7 @@ class GoogleLoginError(Exception):
         self.code = code
 
 
-def login_with_google(claims, token, current_user=None):
+def login_with_google(claims, current_user=None):
     subject = claims.get("sub")
     if not subject:
         raise GoogleLoginError("invalid_token")

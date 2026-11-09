@@ -63,7 +63,7 @@ def google_callback_view(request):
         return _frontend_redirect("/login", auth_error="oidc_error")
 
     try:
-        user = login_with_google(dict(claims), token, current_user=request.user)
+        user = login_with_google(dict(claims), current_user=request.user)
     except GoogleLoginError as exc:
         return _frontend_redirect("/login", auth_error=exc.code)
 
