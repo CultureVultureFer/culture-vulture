@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import UserManager as DjangoUserManager
 from django.core.validators import RegexValidator
@@ -42,6 +44,7 @@ username_validator = RegexValidator(
 
 
 class User(AbstractUser):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -73,28 +76,3 @@ class User(AbstractUser):
     @property
     def is_app_admin(self) -> bool:
         return self.role.name == Role.ADMIN
-
-
-class OAuthAccount(models.Model):
-    GOOGLE = "google"
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="oauth_accounts")
-    provider = models.CharField(max_length=32)
-    provider_user_id = models.CharField(max_length=255)
-    access_token = models.TextField(blank=True)
-    refresh_token = models.TextField(blank=True)
-    token_expires_at = models.DateTimeField(null=True, blank=True)
-    scope = models.TextField(blank=True)
-    token_type = models.CharField(max_length=32, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "OAuth account"
-        constraints = [
-            models.UniqueConstraint(fields=["provider", "provider_user_id"], name="oauth_provider_uid_unique"),
-            models.UniqueConstraint(fields=["user", "provider"], name="oauth_user_provider_unique"),
-        ]
-
-    def __str__(self):
-        return f"{self.provider}:{self.provider_user_id} -> {self.user_id}"
