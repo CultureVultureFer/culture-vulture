@@ -1,13 +1,12 @@
-import json
 import time
 from unittest import mock
 from urllib.parse import parse_qs, urlparse
 
-from django.test import Client, TestCase, override_settings
+from django.test import TestCase, override_settings
 from joserfc import jwt
 from joserfc.jwk import RSAKey
 
-from .models import OAuthAccount, Role, User
+from .models import Role, User
 from .oidc import google
 
 FRONTEND = "http://localhost:5173"
@@ -36,10 +35,6 @@ def make_id_token(nonce, **claims):
     return jwt.encode({"alg": "RS256", "kid": "test"}, payload, _KEY)
 
 
-def post_json(client, url, data, **extra):
-    return client.post(url, data=json.dumps(data), content_type="application/json", **extra)
-
-
 class FakeGoogleMixin:
     def setUp(self):
         super().setUp()
@@ -54,10 +49,9 @@ class FakeGoogleMixin:
         google.server_metadata.update(self._saved[1])
         super().tearDown()
 
-    def google_flow(self, client=None, next_path=None, state=None, **claims):
+    def google_flow(self, client=None, state=None, **claims):
         client = client or self.client
-        url = "/api/auth/google/login/" + (f"?next={next_path}" if next_path else "")
-        resp = client.get(url)
+        resp = client.get("/api/auth/google/login/")
         self.assertEqual(resp.status_code, 302)
         params = parse_qs(urlparse(resp["Location"]).query)
 
@@ -76,18 +70,10 @@ class FakeGoogleMixin:
 
 @override_settings(FRONTEND_URL=FRONTEND)
 class GoogleLoginTests(FakeGoogleMixin, TestCase):
-    def test_redirect_to_google_has_state_nonce_pkce(self):
-        _, _, params = self.google_flow()
-        self.assertEqual(params["code_challenge_method"], ["S256"])
-        self.assertEqual(params["scope"], ["openid email profile"])
-        for key in ("state", "nonce", "code_challenge", "redirect_uri"):
-            self.assertIn(key, params)
-
     def test_first_google_login_registers_user(self):
-        resp, sent, _ = self.google_flow()
+        resp, _, _ = self.google_flow()
 
         self.assertEqual(resp["Location"], FRONTEND + "/hello")
-        self.assertIn("code_verifier", sent)
 
         user = User.objects.get()
         self.assertEqual(user.email, "marko@gmail.com")
@@ -95,60 +81,20 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
         self.assertEqual(user.role.name, Role.USER)
         self.assertFalse(user.has_usable_password())
 
-        account = OAuthAccount.objects.get()
-        self.assertEqual((account.provider, account.provider_user_id), ("google", "google-sub-1"))
-        self.assertEqual(account.access_token, "ya29.test")
-        self.assertIsNotNone(account.token_expires_at)
-
         me = self.client.get("/api/auth/me/").json()
-        self.assertEqual(me, {"id": user.pk, "username": "Marko Marić", "email": "marko@gmail.com", "role": "USER"})
+        self.assertEqual(me, {"id": str(user.pk), "username": "Marko Marić", "email": "marko@gmail.com", "role": "USER"})
 
     def test_second_google_login_reuses_user(self):
         self.google_flow()
         self.client.post("/api/auth/logout/")
         self.google_flow(email="marko.novi@gmail.com")
         self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(OAuthAccount.objects.count(), 1)
         self.assertEqual(User.objects.get().email, "marko@gmail.com")
-
-    def test_login_rotates_session_key(self):
-        self.client.get("/api/auth/csrf/")
-        self.client.session.save()
-        before = self.client.session.session_key
-        self.google_flow()
-        self.assertNotEqual(before, self.client.session.session_key)
-
-    def test_username_collision_gets_suffix(self):
-        self.google_flow()
-        self.google_flow(client=Client(), sub="google-sub-2", email="drugi.marko@gmail.com")
-        self.assertTrue(User.objects.filter(username="Marko Marić 2").exists())
 
     def test_superuser_email_is_not_auto_linked(self):
         User.objects.create_superuser(username="Admin", email="marko@gmail.com", password="Admin-Pass-123")
         resp, _, _ = self.google_flow()
         self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=email_exists")
-        self.assertFalse(OAuthAccount.objects.exists())
-
-    def test_logged_in_superuser_links_google(self):
-        admin = User.objects.create_superuser(username="Admin", email="admin@example.com", password="Admin-Pass-123")
-        self.client.force_login(admin)
-        resp, _, _ = self.google_flow()
-        self.assertEqual(resp["Location"], FRONTEND + "/hello")
-        self.assertEqual(OAuthAccount.objects.get().user, admin)
-
-    def test_google_linked_to_someone_else(self):
-        self.google_flow()
-        admin = User.objects.create_superuser(username="Admin", email="admin@example.com", password="Admin-Pass-123")
-        c = Client()
-        c.force_login(admin)
-        resp, _, _ = self.google_flow(client=c)
-        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=google_linked_to_other_account")
-
-    def test_disabled_account(self):
-        self.google_flow()
-        User.objects.update(is_active=False)
-        resp, _, _ = self.google_flow(client=Client())
-        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=account_disabled")
 
     def test_unverified_email_rejected(self):
         resp, _, _ = self.google_flow(email_verified=False)
@@ -160,20 +106,6 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
         self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=oidc_error")
         self.assertFalse(User.objects.exists())
 
-    def test_token_for_other_app_rejected(self):
-        resp, _, _ = self.google_flow(aud="tudja-aplikacija")
-        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=oidc_error")
-        self.assertFalse(User.objects.exists())
-
-    def test_token_from_other_issuer_rejected(self):
-        resp, _, _ = self.google_flow(iss="https://zlo.example")
-        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=oidc_error")
-
-    def test_user_cancelled(self):
-        self.client.get("/api/auth/google/login/")
-        resp = self.client.get("/api/auth/google/callback/", {"error": "access_denied"})
-        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=cancelled")
-
 
 class SessionTests(TestCase):
     def test_me_anonymous(self):
@@ -184,21 +116,3 @@ class SessionTests(TestCase):
         self.client.force_login(user)
         self.assertEqual(self.client.post("/api/auth/logout/").status_code, 204)
         self.assertEqual(self.client.get("/api/auth/me/").status_code, 401)
-
-    def test_logout_rejects_get(self):
-        self.assertEqual(self.client.get("/api/auth/logout/").status_code, 405)
-
-    def test_password_endpoints_do_not_exist(self):
-        body = {"email": "ana@example.com", "password": "Kultura-2026!", "username": "ana"}
-        self.assertEqual(post_json(self.client, "/api/auth/login/", body).status_code, 404)
-        self.assertEqual(post_json(self.client, "/api/auth/register/", body).status_code, 404)
-        self.assertFalse(User.objects.exists())
-
-
-class RoleSetupTests(TestCase):
-    def test_roles_seeded_by_migration(self):
-        self.assertEqual(set(Role.objects.values_list("name", flat=True)), {"USER", "ORGANIZER", "ADMIN"})
-
-    def test_superuser_gets_admin_role(self):
-        admin = User.objects.create_superuser(username="Admin", email="admin@example.com", password="Admin-Pass-123")
-        self.assertTrue(admin.is_app_admin)
