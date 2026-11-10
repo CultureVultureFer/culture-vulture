@@ -57,6 +57,14 @@ class User(AbstractUser):
         error_messages={"unique": "An account with this email already exists."},
     )
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="users")
+    # Postavljeno samo za organizatore; jedna organizacija može imati više organizatora.
+    organization = models.ForeignKey(
+        "Organization",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="organizers",
+    )
 
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
@@ -77,3 +85,24 @@ class User(AbstractUser):
     @property
     def is_app_admin(self):
         return self.role.name == Role.ADMIN
+
+
+class Organization(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(
+        max_length=150,
+        validators=[username_validator],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                Lower("name"),
+                name="organization_name_ci_unique",
+                violation_error_message="An organization with this name already exists.",
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
