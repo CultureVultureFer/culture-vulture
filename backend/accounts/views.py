@@ -16,7 +16,7 @@ from .services import GoogleLoginError, login_with_google, register_organizer_wi
 MODEL_BACKEND = "django.contrib.auth.backends.ModelBackend"
 # Will be changed later, when we decide where users should be rerouted after login
 FRONTEND_REDIRECT_PATH = "/hello"
-# Ključevi sesije koji se čuvaju između zahtjeva za registraciju organizatora i Google callbacka
+# Session keys kept between the organizer registration request and the Google callback
 AUTH_INTENT = "auth_intent"
 PENDING_ORGANIZATION_NAME = "pending_organization_name"
 ORGANIZATION_INTENT = "organization"
@@ -66,7 +66,7 @@ def _read_json_object(request):
 
 @require_GET
 def google_login_view(request):
-    # Obična prijava uvijek ostaje obična prijava, čak i nakon odustale registracije organizatora.
+    # A normal login always stays a normal login, even after an abandoned organizer registration.
     _pop_pending_organization(request.session)
     return _google_authorize_redirect(request)
 
@@ -74,7 +74,7 @@ def google_login_view(request):
 @require_GET
 def google_callback_view(request):
     next_path = FRONTEND_REDIRECT_PATH
-    # Odmah pročitaj i obriši, tako da ove vrijednosti vrijede samo za jedan pokušaj.
+    # Read and clear right away so these values are valid for a single attempt only.
     intent, organization_name = _pop_pending_organization(request.session)
 
     try:
@@ -105,9 +105,9 @@ def google_callback_view(request):
 
 @require_http_methods(["GET", "POST"])
 def organization_register_view(request):
-    # Jednokratna registracija organizatora na jednoj adresi:
-    #   POST {"name": ...} provjeri naziv (200 / 400) i zapamti ga u sesiji,
-    #   GET zatim pošalje preglednik na Google. Kasnije prijave idu kroz običnu Google prijavu.
+    # One-time organizer registration on a single URL:
+    #   POST {"name": ...} validates the name (200 / 400) and remembers it in the session,
+    #   GET then sends the browser to Google. Later logins use the normal Google login.
     if request.method == "GET":
         return _organization_register_google(request)
     return _organization_register_name(request)

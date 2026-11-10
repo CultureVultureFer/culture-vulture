@@ -215,7 +215,7 @@ class OrganizerGoogleRegistrationTests(FakeGoogleMixin, TestCase):
         self.assertEqual(user.organization, organization)
         self.assertEqual(Organization.objects.count(), 1)
         organization.refresh_from_db()
-        self.assertEqual(organization.name, "Klub Močvara")  # zadržava se izvorni naziv
+        self.assertEqual(organization.name, "Klub Močvara")  # original spelling is kept
 
     def test_organization_can_have_many_organizers(self):
         self.register_name()
@@ -306,7 +306,7 @@ class OrganizerGoogleRegistrationTests(FakeGoogleMixin, TestCase):
 
     def test_normal_login_after_abandoned_registration(self):
         self.register_name()
-        self.client.get(self.REGISTER_URL)  # korisnik je otišao na Google i nikad se nije vratio
+        self.client.get(self.REGISTER_URL)  # user went to Google but never came back
 
         resp, _, _ = self.google_flow()
         self.assertEqual(resp["Location"], FRONTEND + "/hello")
@@ -318,6 +318,6 @@ class OrganizerGoogleRegistrationTests(FakeGoogleMixin, TestCase):
 
     def test_registration_values_used_only_once(self):
         self.register_name()
-        self.organization_flow(state="podmetnuto")  # i neuspjeli pokušaj čisti sesiju
+        self.organization_flow(state="podmetnuto")  # failed attempt still clears the session
         self.assert_session_cleared()
         self.assertFalse(User.objects.exists())

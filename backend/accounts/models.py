@@ -57,7 +57,7 @@ class User(AbstractUser):
         error_messages={"unique": "An account with this email already exists."},
     )
     role = models.ForeignKey(Role, on_delete=models.PROTECT, related_name="users")
-    # Postavljeno samo za organizatore; jedna organizacija može imati više organizatora.
+    # Set only for organizers; one organization can have many organizers.
     organization = models.ForeignKey(
         "Organization",
         null=True,

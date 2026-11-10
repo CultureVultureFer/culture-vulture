@@ -30,7 +30,7 @@ def login_with_google(claims, current_user=None):
 def register_organizer_with_google(claims, organization_name, current_user=None):
     user_id = _google_user_id(claims, current_user)
 
-    # Kao obična prijava: postojeći račun se samo prijavi, a naziv organizacije se ignorira.
+    # Like a normal login: an existing account just logs in, the organization name is ignored.
     existing = _existing_google_user(user_id)
     if existing is not None:
         return existing
@@ -60,7 +60,7 @@ def _get_or_create_organization(name):
         with transaction.atomic():
             return Organization.objects.create(name=name)
     except IntegrityError:
-        # Netko je u istom trenutku kreirao istu organizaciju, pa se pridruži njegovoj.
+        # Someone created the same organization at the same moment, so join theirs.
         return Organization.objects.get(name__iexact=name)
 
 
