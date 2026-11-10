@@ -15,6 +15,7 @@ entity "USER" as user {
    * email: text
    * created_at: datetime
    * role_id: ID <<FK>>
+   password: text
 }
 
 entity "OAUTH_ACCOUNTS" as oauth_accounts {
