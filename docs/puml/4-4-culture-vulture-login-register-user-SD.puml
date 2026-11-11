@@ -1,0 +1,94 @@
+' ==============================================================================
+' 4-4-culture-vulture-login-register-user-SD.puml
+'
+' Svrha:    Prikazuje podnošenje prijave/registracije običnog korisnika putem OIDCa
+'           kretanje web-klijenta tijekom dobivanja tokena, pohranu korisnika na 
+'           posuližitelju i moguću validaciju tokena, odnosno greške. 
+' Autor:    Karlo Čehulić, kolegij Programsko inženjerstvo
+' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
+'           autor ih je pregledao i odgovara za konačni sadržaj.
+' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
+'           ponašanjem klijenta i poslužitelja. Nazivi operacija su
+'           konceptualni i ne moraju se točno podudarati s implementacijom.
+'
+' Diagram level: Conceptual Interaction Design
+' Diagram type:  Sequence Diagram
+' Version:       1.0
+' ==============================================================================
+    
+    @startuml
+    title Prijava/registracija običnog korisnika
+
+    skinparam maxMessageSize 150
+    skinparam shadowing false
+    skinparam defaultFontName Arial
+    skinparam sequenceMessageAlign center
+    skinparam ArrowColor #212529
+
+    skinparam sequence {
+        ParticipantBackgroundColor #E7F1FF
+        ParticipantBorderColor #0D6EFD
+        ActorBackgroundColor #F8F9FA
+        ActorBorderColor #212529
+        LifeLineBorderColor #212529
+    }
+
+    autonumber
+
+    ' ==============================================================================
+    ' Sudionici (sa stereotipima)
+    ' ==============================================================================
+    actor "Korisnik" as User
+    participant "Web-klijent" as Web <<UI>>
+    participant "API za prijave" as API <<API>>
+    participant "API Google IdP" as IdP <<External>>
+    participant "Usluga za prijave" as Service <<Application>>
+    database "Spremište korisnika" as Store <<Persistence>>
+
+    ' ==============================================================================
+    ' Faza 1: Prijava i autentifikacija korisnika
+    ' ==============================================================================
+    User -> Web++ : pritisni na <Connect with Google> gumb
+    Web -> API++ : preusmjeri na /google/login
+    API -> IdP++ : preusmjeri na Google OAuth sa OIDC
+    IdP --> API-- : 302 na /google/callback
+
+    alt Korisnik je odustao od Google OIDC
+        API --> Web : 302 na /login
+        Web --> User : Prikaži neuspjeh
+
+    else Korisnik je prihvatio Google OIDC
+        API -> Service++ : login_with_google(claims)
+
+        alt Prijava sa Google-om nije uspjela
+            Service --> API : GoogleLoginError
+            API --> Web : 302 na /login
+            Web --> User : Prikaži neuspjeh
+
+        else Prijava sa Google-om je uspjela
+            Service -> Store++ : getUser(claims.sub)
+
+            alt Korisnik već postoji
+                Store --> Service : User object
+            else Korisnik ne postoji
+                Store --> Service-- : null
+        	Service -> Store++ : createUser(claims.sub)
+                Store --> Service-- : User object
+            end
+
+            Service --> API-- : uspjeh
+            API --> Web-- : 302 na /
+
+            Web -> API++ : GET /me
+            API -> Service++ : <Internal> isAuthenticated()
+            Service -> Store++ : getSessionPayload()
+            Store --> Service-- : session payload with user_id
+            Service -> Store++ : getUser(user_id)
+            Store --> Service-- : User
+            Service --> API-- : uspjeh
+            API --> Web-- : 200 s podacima o korisniku
+            Web --> User-- : prikaži homepage
+        end
+    end
+
+    @enduml
