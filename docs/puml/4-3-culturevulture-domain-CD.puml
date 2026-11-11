@@ -1,0 +1,174 @@
+' ==============================================================================
+' 4-3-culturevulture-domain-CD.puml
+'
+' Svrha:    Prikazuje domenski model i aplikacijski servis za objavu, pregled
+'           i upravljanje događajima (F-010, F-004, F-011, F-012, F-008,
+'           F-015, F-016): agregat Event (s dijelom Location), servis
+'           EventService i sučelje EventRepository (trajnost je apstrahirana).
+'           Slojevi su razdvojeni na aplikacijski i domenski.
+' Autor:    Roko Gulić, kolegij Programsko inženjerstvo
+' AI:       Dijagram je generirao AI (Claude Opus 5.5) na temelju README-a,
+'           ERD-a 4-2 (v1.1), funkcijskih zahtjeva i povratnih informacija
+'           tima; autor ga je pregledao i odgovara za konačni sadržaj.
+' Praćenje: Model je polazište za implementaciju. Kad se dizajn promijeni
+'           tijekom razvoja, ažurirati model; nazivi operacija su konceptualni.
+'           Razlike prema ERD-u 4-2 (v1.1) koje ERD treba preuzeti:
+'           - title i description (traže ih README i F-008),
+'           - kategorije su fiksan popis (EventCategory) umjesto tablice CATEGORY,
+'           - externalId za događaje uvezene s TicketMastera,
+'           - organizerId nije obavezan (uvezeni događaji nemaju organizatora).
+'
+' Diagram level: Structural / Domain Design
+' Diagram type:  Class Diagram
+' Version:       1.1
+'   1.1: uklonjeni cancel(), EventStatus i EventSource; dodani EventCategory
+'        (TICKETMASTER kao kategorija uvezenih događaja), pretraga, filtriranje
+'        i sortiranje (findVisible; sortBy je "date" ili "name").
+' ==============================================================================
+
+@startuml
+title Sustav CultureVulture – domenski model objave događaja
+
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+skinparam ArrowColor #212529
+
+skinparam class {
+    BackgroundColor #E7F1FF
+    BorderColor #0D6EFD
+}
+
+skinparam note {
+    BackgroundColor #F8F9FA
+    BorderColor #212529
+    FontColor #212529
+}
+
+' ==============================================================================
+' Aplikacijski sloj: orkestrira slučajeve korištenja i delegira domeni.
+' ==============================================================================
+package "Aplikacijski sloj" {
+
+  class EventService <<ApplicationService>> {
+    +publish(): ID
+    +update(): void
+    +delete(): void
+    +search(): List<Event>
+    +listByOrganizer(): List<Event>
+  }
+
+}
+
+' ==============================================================================
+' Domenski sloj: sadrži poslovno stanje i pravila.
+' ==============================================================================
+package "Domenski sloj" {
+
+  ' Organizator (korisnik) je drugi agregat, pa se referencira samo
+  ' identifikatorom (organizerId), a ne objektom. Location je dio agregata i
+  ' prikazan je kompozicijom, a ne atributima. Kategorije su fiksan popis
+  ' vrijednosti (enum), pa nisu zasebni entiteti.
+  class Event <<Entity>> <<AggregateRoot>> {
+    -id: ID
+    -organizerId: ID [0..1]
+    -externalId: String [0..1]
+    -title: String
+    -description: String
+    -categories: Set<EventCategory>
+    -startsAt: DateTime
+    -endsAt: DateTime
+    -entryPrice: Decimal [0..1]
+    +update(details: EventDetails): void
+    +isOwnedBy(organizerId: ID): Boolean
+    +isImported(): Boolean
+  }
+
+  class Location <<ValueObject>> {
+    -address: String {readOnly}
+    -latitude: Decimal {readOnly}
+    -longitude: Decimal {readOnly}
+  }
+
+  enum EventCategory {
+    MUSIC
+    SPORT
+    THEATRE
+    EDUCATION
+    FESTIVALS
+    TICKETMASTER
+  }
+
+  interface EventRepository <<Repository>> {
+    +findById(id: ID): Event
+    +findVisible(query: String [0..1], categories: Set<EventCategory>, sortBy: String): List<Event>
+    +findByOrganizer(organizerId: ID): List<Event>
+    +save(event: Event): void
+    +delete(id: ID): void
+  }
+
+}
+
+' ==============================================================================
+' Veze i višestrukosti
+' ==============================================================================
+
+' Location je value object koji ima smisla samo uz događaj: životni ciklus mu
+' je vezan uz događaj (kompozicija).
+Event "1" *-- "1" Location : sadrži ►
+
+' Servis ovisi o sučelju repozitorija, a ne o konkretnoj implementaciji.
+EventService ..> Event : stvara / mijenja ►
+EventService ..> EventRepository : učitava / sprema / briše ►
+EventRepository ..> Event : vraća / sprema ►
+
+' ==============================================================================
+' Ograničenja
+' ==============================================================================
+
+note right of Event
+  Pri stvaranju se provjeravaju invarijante
+  (ValidationException):
+  - title i barem jedna kategorija su obavezni,
+  - endsAt je nakon startsAt,
+  - entryPrice >= 0 (ako je zadan; README traži
+    da organizator unese cijenu ulaznice).
+
+  Događaj koji objavi organizator ima organizerId,
+  a ne smije imati kategoriju TICKETMASTER.
+  Uvezeni događaj (isImported()) ima externalId,
+  kategoriju TICKETMASTER i nema organizerId.
+  externalId služi da ponovni uvoz s TicketMastera
+  osvježi postojeći događaj umjesto da stvori
+  duplikat (F-003).
+
+  update() nije dopušten za uvezene događaje;
+  njih osvježava samo uvoz.
+end note
+
+note right of Location
+  Nepromjenjiv. Invarijante:
+  address nije prazan,
+  latitude u [-90, 90],
+  longitude u [-180, 180];
+  inače ValidationException.
+end note
+
+note bottom of EventService
+  publish() smije izvesti samo organizator (F-010).
+  update() smije izvesti organizator koji je vlasnik
+  događaja (isOwnedBy), a delete() vlasnik ili
+  administrator (F-004, F-012); obrisani događaj se
+  uklanja i više se ne prikazuje.
+  search() pretražuje po nazivu događaja ili
+  organizatora, filtrira po kategorijama i sortira
+  po datumu ili nazivu, sortBy = "date" | "name"
+  (F-008, F-016, F-015).
+  listByOrganizer() vraća događaje organizatora (F-011).
+  Provjera dopuštenja je u aplikacijskom sloju i
+  koristi uloge iz F-001 (ORGANIZER, ADMIN).
+  Nazivi operacija su konceptualni
+  (u dijagramu 4-4: validateAndPublish()).
+end note
+
+@enduml
