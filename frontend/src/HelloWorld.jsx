@@ -6,14 +6,18 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import { loginWithGoogle } from "./api/auth";
+import { BACKEND_URL } from "./utils/constants";
 
 function HelloWorld() {
+  const handleClick = async () => {
+    const res = await fetch(`${BACKEND_URL}/auth/me`);
+    console.log(await res.json());
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          DEV ONLY!!! For us to make sure OIDC is configured before adding more
-          logic
           <button onClick={loginWithGoogle}>Log in with Google...</button>
           <IconButton
             size="large"
@@ -21,6 +25,7 @@ function HelloWorld() {
             color="inherit"
             aria-label="menu"
             sx={{ mr: 2 }}
+            onClick={handleClick}
           >
             <MenuIcon />
           </IconButton>
