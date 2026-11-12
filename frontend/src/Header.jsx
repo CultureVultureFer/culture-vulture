@@ -15,7 +15,7 @@ function Header(){
                 src={logo1}
                 alt="CultureVulture"
                 className="logo1"/>
-                <p1 className="p1">Culture from a bird's eye view.</p1>
+                <p className="p1">Culture from a bird's eye view.</p>
             </div>
             
             <SearchBar></SearchBar>
