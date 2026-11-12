@@ -1,6 +1,7 @@
 ' Initial version of ER diagram,
 ' SESSIONS, and OAUTH_ACCOUNTS are likely to be reconfigured
-' Version: 1.1
+' Version: 1.2
+' 
 
 @startuml
 title CultureVulture
@@ -14,6 +15,7 @@ entity "USER" as user {
    * email: text
    * created_at: datetime
    * role_id: ID <<FK>>
+   password: text
 }
 
 entity "OAUTH_ACCOUNTS" as oauth_accounts {
@@ -46,16 +48,27 @@ entity "ROLE" as role {
    *role_name: text
 }
 
+entity "UPDATE_TRACKER" as update_tracker {
+   *id: ID <<PK>>
+   --
+   *next_update: datetime
+   *update_frequency: time
+   *event_lower_bound: time
+   *event_upper_bound: time
+}
+
 entity "EVENT" as event {
    *id: ID <<PK>>
    --
-   *organizer_id: ID <<FK>>
-   *start: datetime
-   *end: datetime
-   *category_id: ID <<FK>>
-   *location: text
-   *latitude: decimal
-   *longitude: decimal
+   *event_name: text
+   ticketmaster_id: text
+   event_description: text
+   organizer_id: ID <<FK>>
+   start: datetime
+   end: datetime
+   location: text
+   latitude: text
+   longitude: text
    entry_price: float
 }
 
@@ -75,13 +88,19 @@ entity "CATEGORY" as category {
    *name: text
 }
 
+entity "EVENT_CATEGORIES" as event_categories {
+   *event_id <<PK, FK>>
+   *category_id <<PK, FK>>
+}
+
 user ||--o{ oauth_accounts : HAS
 user ||--o{ sessions: HAS
 user }o--|| role: ASSIGNED
 user ||--o{ event: CREATES
 user ||--o{ comments: REVIEWS
 event ||--o{ comments: RECEIVES
-event }o--o{ category: IS_OF
+event ||--o{ event_categories: IS_OF
+event_categories }o--|| category: IS
 
 
 note left of user
@@ -95,10 +114,17 @@ note right of comments
   1-5
 end note
 
+note right of event
+  Most attributes are nullable, as they can be added later.
+end note
+
 note right of comments
    Comment_text is optional,
    user may only give number rating.
 end note
 
+note left of update_tracker
+  Preliminary, and will likely be changed.
+end note
 
 @enduml
