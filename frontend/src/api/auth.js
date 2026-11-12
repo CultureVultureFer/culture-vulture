@@ -1,13 +1,12 @@
 import { BACKEND_URL } from "../utils/constants.js";
 import axios from "axios";
 
-export function loginWithGoogle(nextPath = "/") {
-  const params = new URLSearchParams({ next: nextPath });
-  window.location.assign(`/api/auth/google/login/?${params}`);
+export function loginWithGoogle() {
+  window.location.assign("/api/auth/google/login/");
 }
 
-export function registerOrgWithGoogle(orgName, nextPath = "/") {
-  const params = new URLSearchParams({ next: nextPath, org_name: orgName });
+export function registerOrgWithGoogle(orgName) {
+  const params = new URLSearchParams({ org_name: orgName });
   window.location.assign(`/api/auth/google/login/?${params}`);
 }
 

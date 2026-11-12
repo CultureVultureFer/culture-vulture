@@ -5,8 +5,10 @@ import "@fontsource/roboto/700.css";
 import { BrowserRouter, Route, Routes } from "react-router";
 import HelloWorld from "./HelloWorld.jsx";
 import Login from "./pages/Login.jsx";
+import RegisterOrg from "./pages/RegisterOrg.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CsrfComponent } from "./components/CsrfComponent.jsx";
+import { Authenticated, GuestOnly } from "./components/RouteGuards.jsx";
 
 const queryClient = new QueryClient();
 
@@ -17,9 +19,15 @@ function App() {
         <CsrfComponent>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<HelloWorld />} />
-              <Route path="hello" element={<HelloWorld />} />
-              <Route path="login" element={<Login />} />
+              <Route element={<GuestOnly />}>
+                <Route path="login" element={<Login />} />
+                <Route path="org/register" element={<RegisterOrg />} />
+              </Route>
+
+              <Route element={<Authenticated />}>
+                <Route path="/" element={<HelloWorld />} />
+                <Route path="hello" element={<HelloWorld />} />
+              </Route>
             </Routes>
           </BrowserRouter>
         </CsrfComponent>
