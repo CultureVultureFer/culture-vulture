@@ -1,4 +1,5 @@
 import { Button, Card, Typography } from "@material-tailwind/react";
+import { Link } from "react-router";
 import { loginWithGoogle } from "../api/auth";
 
 export default function Login() {
@@ -27,6 +28,12 @@ export default function Login() {
           />{" "}
           sign in with google
         </Button>
+        <Link
+          to="/org/register"
+          className="font-medium text-secondary-foreground hover:underline"
+        >
+          Want to become an organizer? Register here
+        </Link>
         <Typography
           variant="small"
           className="text-accent-grey text-center px-8"
