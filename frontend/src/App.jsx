@@ -13,8 +13,8 @@ import {
   GuestOnly,
 } from "./components/RouteGuards.jsx";
 
-const queryClient = new QueryClient();
 
+//import "./App.ccs";
 function App() {
   return (
     <div className="w-screen h-screen bg-primary-background">
@@ -39,4 +39,4 @@ function App() {
   );
 }
 
-export default App;
+export default App

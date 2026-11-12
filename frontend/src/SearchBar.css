@@ -1,0 +1,37 @@
+.sdiv {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 700px;
+
+  border: 2px solid #F7F4EC;
+  border-radius: 25px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: #F7F4EC;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 15px 20px;
+
+  background: transparent;
+  border: none;
+  outline: none;
+  color: grey;
+  font-size: 18px;
+}
+
+.search-input::placeholder {
+  color: grey;
+}
+
+.search-button {
+  padding: 15px 25px;
+  background-color: #F7F4EC;
+  color: #263A32;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+}
