@@ -10,7 +10,7 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: ["CMD-SHELL", "pg_isready -U culturevultureuser -d culturevulturedb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,6 +21,9 @@ services:
       target: development
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_venv:/app/.venv
     environment:
       # Enable Django's verbose debug error pages (the dev server always auto-reloads).
       DEBUG: 1
@@ -37,7 +40,8 @@ services:
       - path: ./backend/.env
         required: false
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "uv sync --frozen --no-install-project &&
+             python manage.py migrate &&
              { python manage.py createsuperuser --noinput || true; } &&
              python manage.py runserver 0.0.0.0:8000"
     # Wait for the database to pass its healthcheck before starting the web service.
@@ -46,20 +50,11 @@ services:
         condition: service_healthy
     develop:
       watch:
-        # Sync source file changes directly into the container so Django's
-        # dev server can reload them without a full image rebuild.
-        - action: sync
-          path: .
-          target: /app
-          ignore:
-            - __pycache__/
-            - "*.pyc"
-            - .git/
-            - .venv/
         # Rebuild the image when dependencies change.
         - action: rebuild
-          path: pyproject.toml
+          path: ./backend/pyproject.toml
         - action: rebuild
-          path: uv.lock
+          path: ./backend/uv.lock
 volumes:
   psql:
+  backend_venv:
