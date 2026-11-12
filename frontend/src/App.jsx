@@ -1,28 +1,22 @@
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
-import { BrowserRouter, Route, Routes } from "react-router";
-import HelloWorld from "./HelloWorld.jsx";
-import OrgRegister from "./pages/OrgRegister.jsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Header from "./Header"
+import Footer from "./Footer"
+import Filters from "./Filters"
 
-const queryClient = new QueryClient();
 
+//import "./App.ccs";
 function App() {
-  return (
-    <div className="bg-blue-50">
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="hello" element={<HelloWorld />} />
-            <Route path="org/register" element={<OrgRegister />} />
-          </Routes>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </div>
-  );
+ 
+  return(
+    <>
+    <Header></Header>
+    
+    <main>
+      <Filters></Filters>
+    </main>
+    <Footer></Footer>
+    </>
+    
+  )
 }
 
-export default App;
+export default App

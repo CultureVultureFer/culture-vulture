@@ -1,0 +1,43 @@
+header{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background-color: #263A32;
+    padding: 20px 40px;
+    box-sizing: border-box;
+}
+
+.p1{
+    color: #C0B8A9;
+}
+
+button{
+    
+    background-color: transparent;
+    cursor:pointer;
+    border: none;
+    color: #F7F4EC
+    ;
+}
+
+.hdiv1{
+    display: flex;
+    gap: 15px;
+}
+
+
+.hdiv2{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.logo1{
+    width: 100px;
+    height: auto;
+}
+
+.hdiv2 p {
+  color: #C0B8A9;
+  margin-top: 5px;
+}
