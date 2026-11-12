@@ -5,7 +5,7 @@ function Filters(){
         <h1 className="h1">Events happening near you</h1>
 
         <div className="fildiv">
-            <p1 className="spanbuttons">Filters: </p1>
+            <p className="spanbuttons">Filters: </p>
             <button className="buttons">Date</button>
             <button className="buttons">Price</button>
             <button className="buttons">Distance</button>

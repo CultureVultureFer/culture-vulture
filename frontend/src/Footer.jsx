@@ -9,9 +9,9 @@ function Footer(){
             alt="CultureVulture2"
             className="logo2"/>
             <div className="fdiv1">
-            <p3 className="p3">CultureVulture</p3>
-            <p1>Culture from a bird's eye view.</p1>
-            <p2>Discover what's happening near you, all in one place.</p2>
+            <p className="p3">CultureVulture</p>
+            <p>Culture from a bird's eye view.</p>
+            <p>Discover what's happening near you, all in one place.</p>
             </div>
             </div>
             <hr className="line"></hr>
