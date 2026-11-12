@@ -41,7 +41,33 @@ uv run basedpyright
 Regular users register and log in **with Google** (OpenID Connect). There are no app passwords for OIDC users, so no password reset or email verification is needed: Google has already verified the email. Login state is kept in a Django session cookie (`sessionid`, HttpOnly); the frontend never stores tokens.
 
 - **User:** "Sign in with Google" -> the first login creates the account (role `USER`) with a deterministic UUID (`uuid5(NAMESPACE_OID, sub)`).
+- **Organizer:** registers **once** with an organization name, then signs in with Google (see below). Every later login is the normal "Sign in with Google", exactly like a user.
 - **Admin:** `createsuperuser` (email + password, used for `/admin`, gets role `ADMIN`).
+
+### Organizer registration
+
+One URL, two steps:
+
+1. `POST /api/auth/organization/register/` with `{"name": "Klub Močvara"}` (`fetch`). The name is validated and remembered in the session.
+   - `200 {"redirect": "/api/auth/organization/register/"}`
+   - `400 {"errors": {"name": [...]}}` (missing, longer than 150 characters, or not allowed characters), `400 {"errors": {"__all__": ["Invalid JSON."]}}`, `400 {"errors": {"__all__": ["You already have an account."]}}` (already logged in)
+2. The frontend navigates to `redirect` (`window.location.assign`), i.e. `GET /api/auth/organization/register/`, which sends the browser to Google. After Google the normal callback:
+   - **new Google account:** if an organization with that name exists (case-insensitive) the organizer **joins** it, otherwise a new organization is created. The account gets role `ORGANIZER`, is logged in and redirected to `/hello`.
+   - **existing account:** just logs in, like a normal login (the name is ignored, the role does not change).
+
+One organization can have many organizers; a user belongs to at most one organization. The pending name is valid for one Google attempt only, and a normal login (`/api/auth/google/login/`) clears it, so an abandoned registration never turns a later login into a registration.
+
+```js
+await fetch("/api/auth/csrf/");
+const csrftoken = document.cookie.match(/csrftoken=([^;]+)/)[1];
+const res = await fetch("/api/auth/organization/register/", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+  body: JSON.stringify({ name }),
+});
+if (res.ok) window.location.assign((await res.json()).redirect);
+else showErrors((await res.json()).errors);   // e.g. errors.name
+```
 
 > **Existing local databases must be reset** if migrating from an older schema (`AUTH_USER_MODEL = 'accounts.User'` with UUID primary key):
 > ```bash
@@ -60,6 +86,21 @@ All POST requests need the `X-CSRFToken` header (obtain the `csrftoken` cookie f
 | GET | `/api/auth/google/login/` | – | redirect to Google | – |
 | GET | `/api/auth/google/callback/` | (called by Google) | redirect to `/hello` | redirect to `/login?auth_error=<code>` |
 | POST | `/api/auth/logout/` | – | 204 | – |
+| POST | `/api/auth/organization/register/` | `{"name": "..."}` | 200 `{"redirect": ...}` | 400 |
+| GET | `/api/auth/organization/register/` | – | redirect to Google | redirect to `/login?auth_error=organization_not_registered` (no name posted first) |
+
+`auth_error` codes on `/login`:
+
+| Code | Meaning |
+|---|---|
+| `cancelled` | User cancelled on Google |
+| `oidc_error` | Google response invalid (e.g. tampered `state`) |
+| `invalid_token` | Google token has no `sub` |
+| `user_already_logged_in` | Someone is already logged in in this browser |
+| `account_disabled` | Account is deactivated (`is_active = False`) |
+| `email_not_verified` | Google email is not verified |
+| `email_exists` | Another account already uses this email |
+| `organization_not_registered` | Organizer registration step 2 without step 1 |
 
 User object:
 ```json
@@ -87,7 +128,8 @@ Error object (401), messages per field, `__all__` for general ones:
 | ERD | Code |
 |---|---|
 | ROLE | `accounts.Role` (`USER`, `ORGANIZER`, `ADMIN`) |
-| USER | `accounts.User` (UUID `id` derived from Google `sub` via `uuid5` for OIDC users, `email` from Google, `username` = display name, `date_joined` = created_at) |
+| USER | `accounts.User` (UUID `id` derived from Google `sub` via `uuid5` for OIDC users, `email` from Google, `username` = display name, `date_joined` = created_at, `organization` = FK to `Organization`, set only for organizers) |
+| ORGANIZATION (new, not in ERD yet) | `accounts.Organization` (UUID `id`, `name` unique case-insensitive, `created_at`); many organizers per organization, deleting an organization that still has organizers is blocked (`PROTECT`) |
 | OAUTH_ACCOUNTS | Removed (`accounts.User.id` is derived deterministically from the Google OIDC `sub` claim) |
 | SESSIONS | Django sessions (`django_session` table), no custom model |
 

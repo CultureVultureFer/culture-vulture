@@ -1,13 +1,15 @@
 @import "tailwindcss";
-/*
-  Josh's Custom CSS Reset
-  https://www.joshwcomeau.com/css/custom-css-reset/
-*/
+@config "../tailwind.config.js";
+@theme {
+  --color-primary-background: #F7F4EC;
+  --color-primary-foreground: #6E896E;
+  --color-primary-text: #111F19;
+  --color-secondary-foreground: #E5C98B;
+  --color-secondary-background: #263A32;
+  --color-inverse-text: #FFFDFA;
+  --color-accent-grey: #C0B8A9;
+  --color-accent-green: #7A8A7A;
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
 }
 
 *:not(dialog) {
@@ -21,7 +23,7 @@
 }
 
 body {
-  font-family: "Roboto";
+  font-family: "Outfit";
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }

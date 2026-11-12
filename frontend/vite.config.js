@@ -4,6 +4,11 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // material-tailwind tries to deduplicate react libraries
+    // this prevents it from happening
+    dedupe: ["react", "react-dom"],
+  },
   server: {
     proxy: {
       // This will need to be setup using something like Caddy in prod...

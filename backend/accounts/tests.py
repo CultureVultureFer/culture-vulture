@@ -1,3 +1,4 @@
+import json
 import time
 from unittest import mock
 from urllib.parse import parse_qs, urlparse
@@ -6,7 +7,7 @@ from django.test import TestCase, override_settings
 from joserfc import jwt
 from joserfc.jwk import RSAKey
 
-from .models import Role, User
+from .models import Organization, Role, User
 from .oidc import google
 
 FRONTEND = "http://localhost:5173"
@@ -49,9 +50,9 @@ class FakeGoogleMixin(TestCase):
         google.server_metadata.update(self._saved[1])
         super().tearDown()
 
-    def google_flow(self, client=None, state=None, **claims):
+    def google_flow(self, client=None, state=None, login_url="/api/auth/google/login/", **claims):
         client = client or self.client
-        resp = client.get("/api/auth/google/login/")
+        resp = client.get(login_url)
         self.assertEqual(resp.status_code, 302)
         params = parse_qs(urlparse(resp["Location"]).query)
 
@@ -116,3 +117,207 @@ class SessionTests(TestCase):
         self.client.force_login(user)
         self.assertEqual(self.client.post("/api/auth/logout/").status_code, 204)
         self.assertEqual(self.client.get("/api/auth/me/").status_code, 401)
+
+
+class OrganizationRegisterTests(TestCase):
+    URL = "/api/auth/organization/register/"
+
+    def register(self, body):
+        data = body if isinstance(body, str) else json.dumps(body)
+        return self.client.post(self.URL, data=data, content_type="application/json")
+
+    def test_valid_name_is_stored_in_session(self):
+        resp = self.register({"name": "  Klub Močvara  "})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json(), {"redirect": "/api/auth/organization/register/"})
+        self.assertEqual(self.client.session["auth_intent"], "organization")
+        self.assertEqual(self.client.session["pending_organization_name"], "Klub Močvara")
+        self.assertFalse(Organization.objects.exists())
+
+    def test_existing_organization_name_accepted(self):
+        Organization.objects.create(name="Klub Močvara")
+        resp = self.register({"name": "KLUB MOČVARA"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(self.client.session["pending_organization_name"], "KLUB MOČVARA")
+
+    def test_missing_or_empty_name_rejected(self):
+        for body in ({}, {"name": ""}, {"name": "   "}):
+            resp = self.register(body)
+            self.assertEqual(resp.status_code, 400)
+            self.assertEqual(resp.json(), {"errors": {"name": ["This field is required."]}})
+
+    def test_invalid_characters_rejected(self):
+        resp = self.register({"name": "<script>"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("name", resp.json()["errors"])
+        self.assertNotIn("pending_organization_name", self.client.session)
+
+    def test_too_long_name_rejected(self):
+        resp = self.register({"name": "x" * 151})
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("name", resp.json()["errors"])
+
+    def test_invalid_json_rejected(self):
+        for body in ("not json", '["Klub"]'):
+            resp = self.register(body)
+            self.assertEqual(resp.status_code, 400)
+            self.assertEqual(resp.json(), {"errors": {"__all__": ["Invalid JSON."]}})
+
+    def test_logged_in_user_rejected(self):
+        user = User.objects.create_user(username="ana", email="ana@example.com")
+        self.client.force_login(user)
+        resp = self.register({"name": "Klub Močvara"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json(), {"errors": {"__all__": ["You already have an account."]}})
+
+    def test_other_methods_not_allowed(self):
+        self.assertEqual(self.client.put(self.URL).status_code, 405)
+
+
+@override_settings(FRONTEND_URL=FRONTEND)
+class OrganizerGoogleRegistrationTests(FakeGoogleMixin, TestCase):
+    REGISTER_URL = "/api/auth/organization/register/"
+    SECOND = {"sub": "google-sub-2", "email": "ivan@gmail.com", "name": "Ivan Ivić"}
+
+    def register_name(self, name="Klub Močvara"):
+        resp = self.client.post(self.REGISTER_URL, data=json.dumps({"name": name}), content_type="application/json")
+        self.assertEqual(resp.status_code, 200)
+
+    def organization_flow(self, **claims):
+        return self.google_flow(login_url=self.REGISTER_URL, **claims)
+
+    def assert_session_cleared(self):
+        self.assertNotIn("auth_intent", self.client.session)
+        self.assertNotIn("pending_organization_name", self.client.session)
+
+    def test_new_name_creates_organization(self):
+        self.register_name()
+        resp, _, _ = self.organization_flow()
+
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        user = User.objects.get()
+        self.assertEqual(user.email, "marko@gmail.com")
+        self.assertEqual(user.username, "Marko Marić")
+        self.assertEqual(user.role.name, Role.ORGANIZER)
+        self.assertEqual(user.organization.name, "Klub Močvara")
+        self.assertFalse(user.has_usable_password())
+        self.assert_session_cleared()
+        self.assertEqual(self.client.get("/api/auth/me/").json()["role"], "ORGANIZER")
+
+    def test_existing_name_joins_organization(self):
+        organization = Organization.objects.create(name="Klub Močvara")
+        self.register_name("klub MOČVARA")
+        resp, _, _ = self.organization_flow()
+
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        user = User.objects.get()
+        self.assertEqual(user.role.name, Role.ORGANIZER)
+        self.assertEqual(user.organization, organization)
+        self.assertEqual(Organization.objects.count(), 1)
+        organization.refresh_from_db()
+        self.assertEqual(organization.name, "Klub Močvara")  # original spelling is kept
+
+    def test_organization_can_have_many_organizers(self):
+        self.register_name()
+        self.organization_flow()
+        self.client.post("/api/auth/logout/")
+
+        self.register_name("Klub Močvara")
+        self.organization_flow(**self.SECOND)
+
+        organization = Organization.objects.get()
+        self.assertEqual(
+            set(organization.organizers.values_list("email", flat=True)),
+            {"marko@gmail.com", "ivan@gmail.com"},
+        )
+
+    def test_organization_created_while_on_google_is_joined(self):
+        self.register_name()
+        organization = Organization.objects.create(name="KLUB MOČVARA")
+
+        resp, _, _ = self.organization_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        self.assertEqual(User.objects.get().organization, organization)
+        self.assertEqual(Organization.objects.count(), 1)
+
+    def test_organizer_logs_in_with_normal_login(self):
+        self.register_name()
+        self.organization_flow()
+        self.client.post("/api/auth/logout/")
+
+        resp, _, _ = self.google_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        self.assertEqual(self.client.get("/api/auth/me/").json()["role"], "ORGANIZER")
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_registration_google_step_without_name(self):
+        resp = self.client.get(self.REGISTER_URL)
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=organization_not_registered")
+
+    def test_existing_user_just_logs_in(self):
+        self.google_flow()
+        self.client.post("/api/auth/logout/")
+
+        self.register_name()
+        resp, _, _ = self.organization_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        user = User.objects.get()
+        self.assertEqual(user.role.name, Role.USER)
+        self.assertIsNone(user.organization)
+        self.assertFalse(Organization.objects.exists())
+        self.assertEqual(self.client.get("/api/auth/me/").json()["email"], "marko@gmail.com")
+        self.assert_session_cleared()
+
+    def test_existing_organizer_just_logs_in(self):
+        self.register_name("Klub Močvara")
+        self.organization_flow()
+        self.client.post("/api/auth/logout/")
+
+        self.register_name("Neki Drugi Klub")
+        resp, _, _ = self.organization_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        self.assertEqual(User.objects.get().organization.name, "Klub Močvara")
+        self.assertEqual(Organization.objects.count(), 1)
+
+    def test_disabled_account_rejected(self):
+        self.google_flow()
+        self.client.post("/api/auth/logout/")
+        User.objects.update(is_active=False)
+
+        self.register_name()
+        resp, _, _ = self.organization_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=account_disabled")
+        self.assertFalse(Organization.objects.exists())
+
+    def test_email_used_by_other_account_rejected(self):
+        User.objects.create_superuser(username="Admin", email="marko@gmail.com", password="Admin-Pass-123")
+        self.register_name()
+        resp, _, _ = self.organization_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=email_exists")
+        self.assertFalse(Organization.objects.exists())
+
+    def test_unverified_email_rejected(self):
+        self.register_name()
+        resp, _, _ = self.organization_flow(email_verified=False)
+        self.assertEqual(resp["Location"], FRONTEND + "/login?auth_error=email_not_verified")
+        self.assertFalse(User.objects.exists())
+        self.assertFalse(Organization.objects.exists())
+
+    def test_normal_login_after_abandoned_registration(self):
+        self.register_name()
+        self.client.get(self.REGISTER_URL)  # user went to Google but never came back
+
+        resp, _, _ = self.google_flow()
+        self.assertEqual(resp["Location"], FRONTEND + "/hello")
+        user = User.objects.get()
+        self.assertEqual(user.role.name, Role.USER)
+        self.assertIsNone(user.organization)
+        self.assertFalse(Organization.objects.exists())
+        self.assert_session_cleared()
+
+    def test_registration_values_used_only_once(self):
+        self.register_name()
+        self.organization_flow(state="podmetnuto")  # failed attempt still clears the session
+        self.assert_session_cleared()
+        self.assertFalse(User.objects.exists())
