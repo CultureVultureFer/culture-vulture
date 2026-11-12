@@ -16,3 +16,4 @@ Konkretno, za to smo koristili [API Explorer.](https://developer.ticketmaster.co
 ## Ono što će biti napravljeno do kraja tjedna
 - F-003 (Sustav podatke dohvaća s vanjskog API-a) - grana `models-django`
 - F-014 (Korisnik može pogledati detalje događaja)
+- F-001 (sekvencijski dijagram prijave/registracije organizatora)
