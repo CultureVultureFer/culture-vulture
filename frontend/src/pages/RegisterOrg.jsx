@@ -6,8 +6,13 @@ import {
   Stepper,
   Typography,
 } from "@material-tailwind/react";
+import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { registerOrgWithGoogle } from "../api/auth";
+import {
+  getErrorMessage,
+  registerOrganizationName,
+  registerOrgWithGoogle,
+} from "../api/auth";
 
 const stepStyle = {
   className: "bg-accent-green text-inverse-text",
@@ -18,6 +23,17 @@ const stepStyle = {
 export default function RegisterOrg() {
   const [step, setStep] = useState(0);
   const [orgName, setOrgName] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: registerOrganizationName,
+    onSuccess: () => setStep(1),
+  });
+
+  const handleSubmitStep1 = (e) => {
+    e.preventDefault();
+    if (!orgName.trim() || mutation.isPending) return;
+    mutation.mutate(orgName.trim());
+  };
 
   return (
     <div className="flex w-full h-full justify-center items-center">
@@ -43,7 +59,7 @@ export default function RegisterOrg() {
         </Stepper>
 
         {step === 0 ? (
-          <>
+          <form onSubmit={handleSubmitStep1} className="flex flex-col gap-8">
             <label className="flex flex-col gap-2 text-sm text-accent-grey">
               Organizer name
               <input
@@ -51,31 +67,40 @@ export default function RegisterOrg() {
                 placeholder="e.g. City Theatre Zagreb"
                 className="h-12 rounded-lg bg-primary-background px-4 text-base text-primary-text outline-none focus:ring-2 focus:ring-secondary-foreground"
                 value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
+                onChange={(e) => {
+                  setOrgName(e.target.value);
+                  if (mutation.isError) mutation.reset();
+                }}
               />
+              {mutation.isError && (
+                <span className="text-red-400 text-xs">
+                  {getErrorMessage(mutation.error)}
+                </span>
+              )}
             </label>
             <Button
+              type="submit"
               size="lg"
               className="bg-secondary-foreground text-primary-text"
-              disabled={!orgName.trim()}
-              onClick={() => setStep(1)}
+              disabled={!orgName.trim() || mutation.isPending}
+              loading={mutation.isPending}
             >
               Continue
             </Button>
-          </>
+          </form>
         ) : (
           <>
             <Typography className="text-inverse-text text-center">
               Connect a Google account for{" "}
               <span className="text-secondary-foreground font-bold">
-                {orgName}
+                {orgName.trim()}
               </span>
             </Typography>
             <Button
               size="lg"
               variant="outlined"
               className="flex items-center justify-center gap-2 bg-white"
-              onClick={() => registerOrgWithGoogle(orgName.trim())}
+              onClick={() => registerOrgWithGoogle()}
             >
               <img
                 src="https://www.material-tailwind.com/logos/logo-google.png"
