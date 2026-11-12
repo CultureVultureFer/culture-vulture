@@ -7,8 +7,11 @@ import HelloWorld from "./HelloWorld.jsx";
 import Login from "./pages/Login.jsx";
 import RegisterOrg from "./pages/RegisterOrg.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { CsrfComponent } from "./components/CsrfComponent.jsx";
-import { Authenticated, GuestOnly } from "./components/RouteGuards.jsx";
+import {
+  Authenticated,
+  CsrfGuard,
+  GuestOnly,
+} from "./components/RouteGuards.jsx";
 
 const queryClient = new QueryClient();
 
@@ -16,9 +19,9 @@ function App() {
   return (
     <div className="w-screen h-screen bg-primary-background">
       <QueryClientProvider client={queryClient}>
-        <CsrfComponent>
-          <BrowserRouter>
-            <Routes>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<CsrfGuard />}>
               <Route element={<GuestOnly />}>
                 <Route path="login" element={<Login />} />
                 <Route path="org/register" element={<RegisterOrg />} />
@@ -28,9 +31,9 @@ function App() {
                 <Route path="/" element={<HelloWorld />} />
                 <Route path="hello" element={<HelloWorld />} />
               </Route>
-            </Routes>
-          </BrowserRouter>
-        </CsrfComponent>
+            </Route>
+          </Routes>
+        </BrowserRouter>
       </QueryClientProvider>
     </div>
   );
