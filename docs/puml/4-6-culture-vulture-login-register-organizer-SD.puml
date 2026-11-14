@@ -58,8 +58,8 @@
     end
 
     User -> Web++ : pritisni na <Connect with Google> gumb
-    API -> IdP++ : preusmjeri na Google s OAuth sa OIDC
-    IdP --> API-- : 302 na /google/callback
+    API -> IdP : preusmjeri na Google s OAuth sa OIDC
+    IdP --> API : 302 na /google/callback
     API -> API : Izvadi ime iz sesije
 
     alt Korisnik je odustao od Google OIDC
