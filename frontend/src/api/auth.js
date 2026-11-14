@@ -21,9 +21,10 @@ export function registerOrgWithGoogle() {
 }
 
 export function getErrorMessage(error) {
-  const errors = error?.response?.data?.errors;
-  if (errors?.name?.length) return errors.name[0];
-  if (errors?.__all__?.length) return errors.__all__[0];
+  const data = error?.response?.data;
+  if (data?.name?.length) return data.name[0];
+  if (data?.non_field_errors?.length) return data.non_field_errors[0];
+  if (typeof data?.detail === "string") return data.detail;
   return "Something went wrong. Please try again.";
 }
 
@@ -36,7 +37,7 @@ export async function getUserData() {
     const { data } = await axios(`${BACKEND_URL}/auth/me/`);
     return data;
   } catch (error) {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 403) {
       return null;
     }
     throw error;
