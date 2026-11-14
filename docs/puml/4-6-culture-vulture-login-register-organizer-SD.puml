@@ -1,0 +1,104 @@
+' ==============================================================================
+' 4-4-culture-vulture-login-register-user-SD.puml
+'
+' Svrha:    Prikazuje podnošenje prijave/registracije organizatora putem OIDCa
+'           kretanje web-klijenta tijekom dobivanja tokena, pohranu organizatora na 
+'           posuližitelju i moguću validaciju tokena, odnosno greške. 
+' Autor:    Tibor Brestovac, kolegij Programsko inženjerstvo
+' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
+'           autor ih je pregledao i odgovara za konačni sadržaj.
+' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
+'           ponašanjem klijenta i poslužitelja. Nazivi operacija su
+'           konceptualni i ne moraju se točno podudarati s implementacijom.
+'
+' Diagram level: Conceptual Interaction Design
+' Diagram type:  Sequence Diagram
+' Version:       1.0
+' ==============================================================================
+    
+    @startuml
+    title Prijava/registracija organizatora
+
+    skinparam maxMessageSize 150
+    skinparam shadowing false
+    skinparam defaultFontName Arial
+    skinparam sequenceMessageAlign center
+    skinparam ArrowColor #212529
+
+    skinparam sequence {
+        ParticipantBackgroundColor #E7F1FF
+        ParticipantBorderColor #0D6EFD
+        ActorBackgroundColor #F8F9FA
+        ActorBorderColor #212529
+        LifeLineBorderColor #212529
+    }
+
+    autonumber
+
+    ' ==============================================================================
+    ' Sudionici (sa stereotipima)
+    ' ==============================================================================
+    actor "Organizator" as User
+    participant "Web-klijent" as Web <<UI>>
+    participant "API za prijave" as API <<API>>
+    participant "API Google IdP" as IdP <<External>>
+    participant "Usluga za prijave" as Service <<Application>>
+    database "Spremište korisnika i  organizacija" as Store <<Persistence>>
+
+    User -> Web++ : Upis imena organizacije i pritisni <Continue>
+    Web -> API++ : POST /api/auth/organization/register/{name}
+
+    alt Ime organizacije nije valjano
+        API --> Web : 400 s greškama forme
+        Web --> User : Prikaži pogrešku
+    else Ime je valjano
+        API -> API : Zapamti ime u sesiji
+        API --> Web-- : 200
+        Web --> User-- : Prikaži gumb <Connect with google>
+    end
+
+    User -> Web++ : pritisni na <Connect with Google> gumb
+    API -> IdP : preusmjeri na Google s OAuth sa OIDC
+    IdP --> API : 302 na /google/callback
+    API -> API : Izvadi ime iz sesije
+
+    alt Korisnik je odustao od Google OIDC
+        API --> Web : 302 na /login
+        Web --> User : Prikaži neuspjeh
+
+    else Korisnik je prihvatio Google OIDC
+        API -> Service++ : register_organizer_with_google(claims, name)
+
+        alt Registracija sa Google-om nije uspjela
+            Service --> API : GoogleLoginError
+            API --> Web : 302 na /login
+            Web --> User : Prikaži neuspjeh
+
+        else Registracija sa Google-om je uspjela
+            Service -> Store++ : getUser(claims.sub)
+
+            alt Korisnik već postoji
+                Store --> Service : User object
+            else Korisnik ne postoji
+                Store --> Service-- : null
+        	    Service -> Store++ : getOrCreateOrganization(name)
+                Store --> Service-- : Organization object
+                Service -> Store++ : createUser(claims.sub, ORGANIZER, organization)
+                Store --> Service-- : User Object
+            end
+
+            Service --> API-- : uspjeh
+            API --> Web-- : 302 na /hello
+
+            Web -> API++ : GET /me
+            API -> Service++ : <Internal> isAuthenticated()
+            Service -> Store++ : getSessionPayload()
+            Store --> Service-- : session payload with user_id
+            Service -> Store++ : getUser(user_id)
+            Store --> Service-- : User
+            Service --> API-- : uspjeh
+            API --> Web-- : 200 s podacima o korisniku
+            Web --> User-- : prikaži homepage
+        end
+    end
+    @enduml

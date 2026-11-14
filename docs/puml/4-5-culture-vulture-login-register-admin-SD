@@ -1,0 +1,81 @@
+@startuml
+' ==============================================================================
+' 4-5-culture-vulture-login-register-admin-SD.puml
+'
+' Svrha:    Prikazuje podnošenje prijave/registracije administratora putem Djangovog
+'           CLI-a i web servera. Django još stvari radi u pozadini u svom core-u,
+'           ti detalji su namjerno izbačeni iz dijagrama.
+' Autor:    Karlo Čehulić, kolegij Programsko inženjerstvo
+' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
+'           autor ih je pregledao i odgovara za konačni sadržaj.
+' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
+'           ponašanjem klijenta i poslužitelja. Nazivi operacija su
+'           konceptualni i ne moraju se točno podudarati s implementacijom.
+'
+' Diagram level: Conceptual Interaction Design
+' Diagram type:  Sequence Diagram
+' Version:       1.0
+' ==============================================================================
+
+    title Prijava/registracija administratora
+
+    skinparam maxMessageSize 150
+    skinparam shadowing false
+    skinparam defaultFontName Arial
+    skinparam sequenceMessageAlign center
+    skinparam ArrowColor #212529
+
+    skinparam sequence {
+        ParticipantBackgroundColor #E7F1FF
+        ParticipantBorderColor #0D6EFD
+        ActorBackgroundColor #F8F9FA
+        ActorBorderColor #212529
+        LifeLineBorderColor #212529
+    }
+
+    autonumber
+
+    ' ==============================================================================
+    ' Sudionici (sa stereotipima)
+    ' ==============================================================================
+    actor "Administrator" as User
+    participant "Web-klijent" as Web <<UI Server>>
+    participant "CLI za prijave" as CLI <<CLI>>
+    participant "Django CORE" as Core <<Application>>
+
+    ' ==============================================================================
+    ' Faza 1: Registracija administratora
+    ' ==============================================================================
+    opt Administrator nema račun
+        User -> CLI++ : createsuperuser
+        CLI --> User-- : obrazac za podatke
+
+        loop Dok podatci nisu valjani
+            User -> CLI++ : unos podataka
+            CLI -> Core++ : validateAndSubmitAdmin()
+
+            alt Podatci su nevaljani
+                Core --> CLI : ValidationError
+                CLI --> User : javi grešku
+    	else Podatci su valjani
+                Core --> CLI-- : uspjeh
+    	    CLI --> User-- : povratna informacija da je administrator kreiran
+            end
+        end
+    end
+
+    ' ==============================================================================
+    ' Faza 2: Prijava administratora
+    ' ==============================================================================
+    User -> Web++ : Unos podataka za prijavu
+    Web -> Core++ : POST /admin/login
+
+    alt Podatci su nevaljani
+        Core --> Web : AuthenticationError
+        Web --> User : Prikaži grešku pri prijavi
+    else Podatci su valjani
+        Core --> Web-- : uspjeh (302 na /admin)
+        Web --> User-- : Prikaži administratorski homepage
+    end
+
+@enduml
