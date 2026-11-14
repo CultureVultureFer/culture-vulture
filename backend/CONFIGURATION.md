@@ -82,7 +82,7 @@ All POST requests need the `X-CSRFToken` header (obtain the `csrftoken` cookie f
 | Method | URL | Body | Success | Errors |
 |---|---|---|---|---|
 | GET | `/api/auth/csrf/` | – | 204, sets `csrftoken` cookie | – |
-| GET | `/api/auth/me/` | – | 200 user | 401 |
+| GET | `/api/auth/me/` | – | 200 user | 403 |
 | GET | `/api/auth/google/login/` | – | redirect to Google | – |
 | GET | `/api/auth/google/callback/` | (called by Google) | redirect to `/hello` | redirect to `/login?auth_error=<code>` |
 | POST | `/api/auth/logout/` | – | 204 | – |

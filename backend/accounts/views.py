@@ -1,16 +1,18 @@
-import json
 from urllib.parse import urlencode
 
 from authlib.integrations.base_client import OAuthError
 from django.conf import settings
 from django.contrib.auth import login, logout
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
-from .forms import OrganizationRegisterForm
 from .oidc import google
+from .serializers import OrganizationRegisterSerializer, UserSerializer
 from .services import GoogleLoginError, login_with_google, register_organizer_with_google
 
 MODEL_BACKEND = "django.contrib.auth.backends.ModelBackend"
@@ -21,21 +23,6 @@ AUTH_INTENT = "auth_intent"
 PENDING_ORGANIZATION_NAME = "pending_organization_name"
 ORGANIZATION_INTENT = "organization"
 
-def user_payload(user):
-    return {
-        "id": user.pk,
-        "username": user.username,
-        "email": user.email,
-        "role": user.role.name,
-    }
-
-
-def _errors(errors, status=400):
-    return JsonResponse({"errors": errors}, status=status)
-
-
-def _not_logged_in():
-    return _errors({"__all__": ["Not logged in."]}, status=401)
 
 def _frontend_redirect(path="/", **params):
     url = settings.FRONTEND_URL.rstrip("/") + path
@@ -56,22 +43,14 @@ def _pop_pending_organization(session):
     return session.pop(AUTH_INTENT, None), session.pop(PENDING_ORGANIZATION_NAME, None)
 
 
-def _read_json_object(request):
-    try:
-        body = json.loads(request.body)
-    except ValueError:
-        return None
-    return body if isinstance(body, dict) else None
-
-
-@require_GET
+@api_view(["GET"])
 def google_login_view(request):
     # A normal login always stays a normal login, even after an abandoned organizer registration.
     _pop_pending_organization(request.session)
     return _google_authorize_redirect(request)
 
 
-@require_GET
+@api_view(["GET"])
 def google_callback_view(request):
     next_path = FRONTEND_REDIRECT_PATH
     # Read and clear right away so these values are valid for a single attempt only.
@@ -103,7 +82,7 @@ def google_callback_view(request):
     return _frontend_redirect(next_path)
 
 
-@require_http_methods(["GET", "POST"])
+@api_view(["GET", "POST"])
 def organization_register_view(request):
     # One-time organizer registration on a single URL:
     #   POST {"name": ...} validates the name (200 / 400) and remembers it in the session,
@@ -120,36 +99,31 @@ def _organization_register_google(request):
 
 
 def _organization_register_name(request):
-    body = _read_json_object(request)
-    if body is None:
-        return _errors({"__all__": ["Invalid JSON."]})
-
     if request.user.is_authenticated:
-        return _errors({"__all__": ["You already have an account."]})
+        return Response({"detail": "You already have an account."}, status=status.HTTP_400_BAD_REQUEST)
 
-    form = OrganizationRegisterForm(data=body)
-    if not form.is_valid():
-        return _errors(form.errors)
+    serializer = OrganizationRegisterSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     request.session[AUTH_INTENT] = ORGANIZATION_INTENT
-    request.session[PENDING_ORGANIZATION_NAME] = form.cleaned_data["name"]
-    return JsonResponse({"redirect": reverse("accounts:organization-register")})
+    request.session[PENDING_ORGANIZATION_NAME] = serializer.validated_data["name"]
+    return Response({"redirect": reverse("accounts:organization-register")})
 
 
-@require_GET
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def me_view(request):
-    if not request.user.is_authenticated:
-        return _not_logged_in()
-    return JsonResponse(user_payload(request.user))
+    return Response(UserSerializer(request.user).data)
 
 
-@require_POST
+@api_view(["POST"])
 def logout_view(request):
     logout(request)
-    return HttpResponse(status=204)
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@require_GET
 @ensure_csrf_cookie
+@api_view(["GET"])
 def csrf_view(request):
-    return HttpResponse(status=204)
+    return Response(status=status.HTTP_204_NO_CONTENT)

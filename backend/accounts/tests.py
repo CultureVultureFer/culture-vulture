@@ -110,13 +110,13 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
 
 class SessionTests(TestCase):
     def test_me_anonymous(self):
-        self.assertEqual(self.client.get("/api/auth/me/").status_code, 401)
+        self.assertEqual(self.client.get("/api/auth/me/").status_code, 403)
 
     def test_logout(self):
         user = User.objects.create_user(username="ana", email="ana@example.com", password=None)
         self.client.force_login(user)
         self.assertEqual(self.client.post("/api/auth/logout/").status_code, 204)
-        self.assertEqual(self.client.get("/api/auth/me/").status_code, 401)
+        self.assertEqual(self.client.get("/api/auth/me/").status_code, 403)
 
 
 class OrganizationRegisterTests(TestCase):
@@ -141,34 +141,41 @@ class OrganizationRegisterTests(TestCase):
         self.assertEqual(self.client.session["pending_organization_name"], "KLUB MOČVARA")
 
     def test_missing_or_empty_name_rejected(self):
-        for body in ({}, {"name": ""}, {"name": "   "}):
+        resp = self.register({})
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json(), {"name": ["This field is required."]})
+
+        for body in ({"name": ""}, {"name": "   "}):
             resp = self.register(body)
             self.assertEqual(resp.status_code, 400)
-            self.assertEqual(resp.json(), {"errors": {"name": ["This field is required."]}})
+            self.assertEqual(resp.json(), {"name": ["This field may not be blank."]})
 
     def test_invalid_characters_rejected(self):
         resp = self.register({"name": "<script>"})
         self.assertEqual(resp.status_code, 400)
-        self.assertIn("name", resp.json()["errors"])
+        self.assertIn("name", resp.json())
         self.assertNotIn("pending_organization_name", self.client.session)
 
     def test_too_long_name_rejected(self):
         resp = self.register({"name": "x" * 151})
         self.assertEqual(resp.status_code, 400)
-        self.assertIn("name", resp.json()["errors"])
+        self.assertIn("name", resp.json())
 
     def test_invalid_json_rejected(self):
-        for body in ("not json", '["Klub"]'):
-            resp = self.register(body)
-            self.assertEqual(resp.status_code, 400)
-            self.assertEqual(resp.json(), {"errors": {"__all__": ["Invalid JSON."]}})
+        resp = self.register("not json")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("detail", resp.json())
+
+        resp = self.register('["Klub"]')
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json(), {"non_field_errors": ["Invalid data. Expected a dictionary, but got list."]})
 
     def test_logged_in_user_rejected(self):
         user = User.objects.create_user(username="ana", email="ana@example.com")
         self.client.force_login(user)
         resp = self.register({"name": "Klub Močvara"})
         self.assertEqual(resp.status_code, 400)
-        self.assertEqual(resp.json(), {"errors": {"__all__": ["You already have an account."]}})
+        self.assertEqual(resp.json(), {"detail": "You already have an account."})
 
     def test_other_methods_not_allowed(self):
         self.assertEqual(self.client.put(self.URL).status_code, 405)
