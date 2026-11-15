@@ -39,7 +39,8 @@ class UpdateTracker(models.Model):
         return f"Next update at {self.next_update}, frequency of {self.update_frequency}"
 
 class Comments(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.RESTRICT)
+    # CASCADE: deleting an event (F-004) also deletes its comments.
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     user = models.ForeignKey("accounts.User", on_delete=models.RESTRICT)
     time = models.DateTimeField()
     rating = models.IntegerField()
@@ -47,7 +48,9 @@ class Comments(models.Model):
     def __str__(self):
         return f"Comment by {self.user} on {self.event}"  
 class Event_Categories(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.RESTRICT)
+    # CASCADE: with RESTRICT an event that has a category could never be deleted (F-004).
+    # The category side stays RESTRICT, so a category in use cannot be deleted.
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.RESTRICT)
     def __str__(self):
         return f"Event {self.event} with Category {self.category}"
