@@ -3,7 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { BrowserRouter, Route, Routes } from "react-router";
-import HelloWorld from "./HelloWorld.jsx";
+import HomePage from "./pages/HomePage";
 import Login from "./pages/Login.jsx";
 import RegisterOrg from "./pages/RegisterOrg.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ import {
   GuestOnly,
 } from "./components/RouteGuards.jsx";
 
-
+const queryClient = new QueryClient();
 //import "./App.ccs";
 function App() {
   return (
@@ -28,8 +28,8 @@ function App() {
               </Route>
 
               <Route element={<Authenticated />}>
-                <Route path="/" element={<HelloWorld />} />
-                <Route path="hello" element={<HelloWorld />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="hello" element={<HomePage />} />
               </Route>
             </Route>
           </Routes>
