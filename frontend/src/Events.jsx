@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Events.css";
+{/*import { Button } from "@material-tailwind/react";*/}
 
 function Events() {
     const[events, setEvents] = useState([])
@@ -40,7 +41,7 @@ function Events() {
                 <div className="evdiv2" key={event.event_id}>
                     <h2>{event.event_name}</h2>
 
-                     <p>{event.event_description}</p>
+                     {/*<p>{event.event_description}</p>*/}
 
                     <p>
                         <strong>Date: </strong>
@@ -61,6 +62,8 @@ function Events() {
                             </>
                             : "Price unknown"}
                     </p>
+                    <button className="buttons">Show details</button>
+
 
                     </div>
             ))}

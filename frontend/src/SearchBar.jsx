@@ -8,12 +8,13 @@ function SearchBar(){
             className="search-input"
             placeholder="Search"
             />
+                    <button className="search-button">
+        Search
+      </button>
         </div>
 
 
-        <button className="search-button">
-        Search
-      </button>
+
         
         </>
     )
