@@ -32,6 +32,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY . .
 
+RUN python manage.py collectstatic --noinput
+
 EXPOSE 8000
 
 # Run Gunicorn as the production WSGI server.
