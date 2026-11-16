@@ -15,9 +15,8 @@ ENV UV_LINK_MODE=copy
 
 WORKDIR /app
 
-RUN --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
 
 # The production stage uses the minimal runtime image, which has no shell,
 # no package manager, and already runs as the nonroot user.
