@@ -1,8 +1,8 @@
 # Copied from https://docs.docker.com/guides/django/#add-the-postgresql-driver
 # syntax=docker/dockerfile:1
 
-# Build stage: the -dev image includes tools needed to install packages.
-FROM dhi.io/python:3.14-alpine3.23-dev AS builder
+# Build stage: install dependencies into a virtual environment.
+FROM python:3.14-alpine3.23 AS builder
 
 # Prevent Python from writing .pyc files to disk.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -18,9 +18,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project --no-dev
 
-# The production stage uses the minimal runtime image, which has no shell,
-# no package manager, and already runs as the nonroot user.
-FROM dhi.io/python:3.14-alpine3.23 AS production
+# The production stage copies only the virtual environment and source code.
+FROM python:3.14-alpine3.23 AS production
 
 # Prevent Python from buffering stdout/stderr so logs appear immediately.
 ENV PYTHONUNBUFFERED=1
