@@ -1,6 +1,9 @@
+import { useNavigate } from "react-router";
 import "./Events.css";
 
 function Events({ isError, isLoading, error, data }) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return <p>Loading...</p>;
   }
@@ -36,7 +39,7 @@ function Events({ isError, isLoading, error, data }) {
               "Price unknown"
             )}
           </p>
-          <button className="buttons">Show details</button>
+          <button className="buttons" onClick={() => navigate(`/events/${event.event_id}`)}>Show details</button>
         </div>
       ))}
     </div>
