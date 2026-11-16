@@ -36,5 +36,5 @@ RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-# Run Gunicorn as the production WSGI server.
-CMD ["gunicorn", "culturevulture.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Run migrations and start Gunicorn as the production WSGI server.
+CMD ["sh", "start.sh"]
