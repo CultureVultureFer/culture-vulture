@@ -1,4 +1,4 @@
-header{
+.header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -6,18 +6,15 @@ header{
     padding: 20px 40px;
     box-sizing: border-box;
 }
-
 .p1{
     color: #C0B8A9;
 }
 
-button{
-    
+.button {
     background-color: transparent;
     cursor:pointer;
     border: none;
-    color: #F7F4EC
-    ;
+    color: #F7F4EC;
 }
 
 .hdiv1{

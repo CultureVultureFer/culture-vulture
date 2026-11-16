@@ -3,7 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { BrowserRouter, Route, Routes } from "react-router";
-import HomePage from "./pages/HomePage";
+import HomePage from "./pages/homepage/HomePage.jsx";
 import Login from "./pages/Login.jsx";
 import RegisterOrg from "./pages/RegisterOrg.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,7 +14,6 @@ import {
 } from "./components/RouteGuards.jsx";
 
 const queryClient = new QueryClient();
-//import "./App.ccs";
 function App() {
   return (
     <div className="w-screen h-screen bg-primary-background">
@@ -39,4 +38,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
