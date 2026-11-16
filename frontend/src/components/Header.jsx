@@ -15,10 +15,8 @@ function Header() {
 
       <div className="hdiv1">
         <button className="button">map</button>
-
       </div>
     </header>
   );
 }
 export default Header;
-

@@ -10,9 +10,12 @@ export function loginWithGoogle() {
 }
 
 export async function registerOrganizationName(name) {
-  const { data } = await axios.post(`${BACKEND_URL}/auth/organization/register/`, {
-    name,
-  });
+  const { data } = await axios.post(
+    `${BACKEND_URL}/auth/organization/register/`,
+    {
+      name,
+    },
+  );
   return data;
 }
 

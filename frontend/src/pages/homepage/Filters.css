@@ -1,31 +1,28 @@
 .h1 {
-  color:black;
+  color: black;
   font-size: 36px;
   text-align: left;
   margin: 30px 40px;
 }
 
-
-.fildiv{
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin: 0 40px 30px;
+.fildiv {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 0 40px 30px;
 }
 
+.buttons {
+  background-color: #e5c98b;
+  color: #111f19;
 
-.buttons{
-    background-color: #e5c98b;
-    color: #111F19;
+  border-radius: 10px;
 
-    border-radius: 10px;
+  padding: 10px 20px;
 
-    padding: 10px 20px;
-
-    cursor: pointer;
-    
+  cursor: pointer;
 }
 
-.buttons:hover{
-    background-color: #d9ba77;
+.buttons:hover {
+  background-color: #d9ba77;
 }

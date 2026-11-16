@@ -4,11 +4,11 @@
   width: 100%;
   max-width: 700px;
 
-  border: 2px solid #F7F4EC;
+  border: 2px solid #f7f4ec;
   border-radius: 25px;
   overflow: hidden;
   box-sizing: border-box;
-  background-color: #F7F4EC;
+  background-color: #f7f4ec;
 }
 .search-input {
   flex: 1;
@@ -28,12 +28,12 @@
 
 .search-button {
   padding: 15px 25px;
-  background-color: #E8CC91;;
-  color: #263A32;
+  background-color: #e8cc91;
+  color: #263a32;
   border: none;
   border-radius: 0;
   cursor: pointer;
 }
 .search-button:hover {
-    background-color: #DDBB76;
+  background-color: #ddbb76;
 }

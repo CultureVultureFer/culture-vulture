@@ -1,10 +1,10 @@
 .footer {
-    background-color: #263A32;
-      color: #F7F4EC;
-      padding: 10px 40px;  
+  background-color: #263a32;
+  color: #f7f4ec;
+  padding: 10px 40px;
 }
 
-.fdiv1{
+.fdiv1 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -12,31 +12,29 @@
   gap: 8px;
 }
 
-.p3{
+.p3 {
   font-size: 30px;
   line-height: 1.2;
 }
 
-.fdiv2{
+.fdiv2 {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 30px;
 }
 
-.logo2{
-
-    width: 100px;
-    height: auto;
+.logo2 {
+  width: 100px;
+  height: auto;
 }
 
-.line{
-  
-  border: 1px solid #C0B8A9;
+.line {
+  border: 1px solid #c0b8a9;
   margin: 30px 0 20px;
 }
 
-.temp{
-  color: #C0B8A9;
+.temp {
+  color: #c0b8a9;
   text-align: center;
 }
