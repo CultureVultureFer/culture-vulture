@@ -13,7 +13,7 @@ export default defineConfig({
     proxy: {
       // This will need to be setup using something like Caddy in prod...
       "/api": {
-        target: "http://localhost:8000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:8000",
         // Needed for CSRF
         changeOrigin: false,
       },
