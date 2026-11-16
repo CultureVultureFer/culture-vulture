@@ -16,7 +16,7 @@ import {
 const queryClient = new QueryClient();
 function App() {
   return (
-    <div className="w-screen h-screen bg-primary-background">
+    <div className="w-full h-screen bg-primary-background">
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>

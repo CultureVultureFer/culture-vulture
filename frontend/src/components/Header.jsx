@@ -14,8 +14,8 @@ function Header() {
       <SearchBar></SearchBar>
 
       <div className="hdiv1">
-        <button id="b1">map</button>
-        <button id="b2">sign in</button>
+        <button className="button">map</button>
+
       </div>
     </header>
   );
