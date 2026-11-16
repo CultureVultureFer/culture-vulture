@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import HelloWorld from "./HelloWorld.jsx";
 import Login from "./pages/Login.jsx";
 import RegisterOrg from "./pages/RegisterOrg.jsx";
+import EventFormPage from "./pages/EventFormPage.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Authenticated,
@@ -30,6 +31,11 @@ function App() {
               <Route element={<Authenticated />}>
                 <Route path="/" element={<HelloWorld />} />
                 <Route path="hello" element={<HelloWorld />} />
+              </Route>
+
+              <Route element= {<Authenticated role="ORGANIZER" />}>
+                <Route path="organizer/events/new" element={<EventFormPage />} />
+                <Route path="organizer/events/:id/edit" element={<EventFormPage />} />
               </Route>
             </Route>
           </Routes>
