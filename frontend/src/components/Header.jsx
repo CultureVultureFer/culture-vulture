@@ -1,7 +1,6 @@
 import "./Header.css";
 import logo1 from "../assets/logo1.svg";
 import SearchBar from "./SearchBar";
-import { Button } from "@material-tailwind/react";
 
 function Header() {
   return (
