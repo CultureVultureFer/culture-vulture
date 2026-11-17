@@ -17,8 +17,6 @@ services:
   backend:
     build:
       context: ./backend/
-      # Build the development stage from the multi-stage Dockerfile.
-      target: development
     ports:
       - "8000:8000"
     volumes:
@@ -55,6 +53,26 @@ services:
           path: ./backend/pyproject.toml
         - action: rebuild
           path: ./backend/uv.lock
+  frontend:
+    build:
+      context: ./frontend/
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+    environment:
+      VITE_PROXY_TARGET: http://backend:8000
+    depends_on:
+      - backend
+    develop:
+      watch:
+        # Rebuild the image when dependencies change.
+        - action: rebuild
+          path: ./frontend/package.json
+        - action: rebuild
+          path: ./frontend/package-lock.json
 volumes:
   psql:
   backend_venv:
