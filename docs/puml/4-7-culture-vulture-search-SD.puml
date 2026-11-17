@@ -1,0 +1,61 @@
+' ==============================================================================
+' 4-7-culture-vulture-search-SD.puml
+'
+' Svrha:    Prikazuje pretraživanje događaja po nazivu događaja ili organizacije;
+'           Prije pretrage sinkronizira događaje s Ticketmasterom i  ako 
+'           vanjski servis ne odgovori ispravno, vraća grešku 502
+' Autor:    Tibor Brestovac, kolegij Programsko inženjerstvo
+' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
+'           autor ih je pregledao i odgovara za konačni sadržaj.
+' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
+'           ponašanjem klijenta i poslužitelja. Nazivi operacija su
+'           konceptualni i ne moraju se točno podudarati s implementacijom.
+'
+' Diagram level: Conceptual Interaction Design
+' Diagram type:  Sequence Diagram
+' Version:       1.0
+' ==============================================================================
+    
+    @startuml
+    title Pretraživanje događaja
+
+    skinparam maxMessageSize 150
+    skinparam shadowing false
+    skinparam defaultFontName Arial
+    skinparam sequenceMessageAlign center
+    skinparam ArrowColor #212529
+
+    skinparam sequence {
+        ParticipantBackgroundColor #E7F1FF
+        ParticipantBorderColor #0D6EFD
+        ActorBackgroundColor #F8F9FA
+        ActorBorderColor #212529
+        LifeLineBorderColor #212529
+    }
+
+    autonumber
+
+    actor "Korisnik" as User
+    participant "Web-klijent" as Web <<UI>>
+    participant "API za događaje" as API <<API>>
+    participant "API Ticketmaster" as Ticketmaster <<External>>
+    database "Spremište događaja i organizacija" as Store <<Persistence>>
+
+    User -> Web ++ : Upis pojma za pretraživanje
+    Web -> API ++ : GET /api/events/?search={pojam}
+
+    API -> Ticketmaster : Dohvati događaje
+
+    alt Ticketmaster vrati grešku
+        Ticketmaster --> API : HTTP error
+        API --> Web : 502 s porukom greške
+        Web --> User : Prikaži pogrešku
+    else Ticketmaster vrati događaje
+        Ticketmaster --> API : Popis događaja
+        API -> Store : Spremi ili ažuriraj događaje
+        API -> Store ++ : Dohvati događaje koji odgovaraju pojmu pretrage
+        Store --> API -- : Popis događaja
+        API --> Web -- : 200 s popisom događaja
+        Web --> User -- : Prikaži događaje
+    end
+    @enduml
