@@ -21,3 +21,4 @@ export function updateEvent(id, payload) {
 export function deleteEvent(id) {
     return axios.delete(`${BACKEND_URL}/events/${id}/`);
 }
+

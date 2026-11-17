@@ -3,7 +3,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { BrowserRouter, Route, Routes } from "react-router";
-import HelloWorld from "./HelloWorld.jsx";
+import HomePage from "./pages/homepage/HomePage.jsx";
 import Login from "./pages/Login.jsx";
 import RegisterOrg from "./pages/RegisterOrg.jsx";
 import EventFormPage from "./pages/EventFormPage.jsx";
@@ -15,10 +15,9 @@ import {
 } from "./components/RouteGuards.jsx";
 
 const queryClient = new QueryClient();
-
 function App() {
   return (
-    <div className="w-screen h-screen bg-primary-background">
+    <div className="w-full h-screen bg-primary-background">
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
@@ -29,8 +28,8 @@ function App() {
               </Route>
 
               <Route element={<Authenticated />}>
-                <Route path="/" element={<HelloWorld />} />
-                <Route path="hello" element={<HelloWorld />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="hello" element={<HomePage />} />
               </Route>
 
               <Route element= {<Authenticated role="ORGANIZER" />}>

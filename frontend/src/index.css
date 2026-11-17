@@ -1,15 +1,14 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 @theme {
-  --color-primary-background: #F7F4EC;
-  --color-primary-foreground: #6E896E;
-  --color-primary-text: #111F19;
-  --color-secondary-foreground: #E5C98B;
-  --color-secondary-background: #263A32;
-  --color-inverse-text: #FFFDFA;
-  --color-accent-grey: #C0B8A9;
-  --color-accent-green: #7A8A7A;
-
+  --color-primary-background: #f7f4ec;
+  --color-primary-foreground: #6e896e;
+  --color-primary-text: #111f19;
+  --color-secondary-foreground: #e5c98b;
+  --color-secondary-background: #263a32;
+  --color-inverse-text: #fffdfa;
+  --color-accent-grey: #c0b8a9;
+  --color-accent-green: #7a8a7a;
 }
 
 *:not(dialog) {

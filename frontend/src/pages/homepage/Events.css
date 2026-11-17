@@ -1,0 +1,32 @@
+.evdiv1 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+  padding: 30px 38px;
+  background-color: #f7f5ef;
+}
+.evdiv2 {
+  background-color: #ffffff;
+  border: 1px solid #ddd8cb;
+  border-radius: 12 px;
+  padding: 20px;
+  box-shadow: 0 2px 8px #00000010;
+  display: flex;
+  flex-direction: column;
+}
+.evdiv2 h2 {
+  color: #243b32;
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+.evdiv2 p {
+  color: #555555;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.evdiv2 button {
+  align-self: flex-end;
+  margin-top: auto;
+}

@@ -19,7 +19,7 @@ SECRET_KEY = 'django-insecure-q)o!b5%&tq6w)+uc-n$5j%-1m(()rolsvyw+rk_n@phni&umj0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", getenv("BACK_PRODUCTION_HOST"), getenv("BACK_INTERNAL_HOST")]
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -116,7 +117,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Email
@@ -149,9 +151,8 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
-
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173', getenv("BACK_PRODUCTION_URL"), FRONTEND_URL]
 
 OIDC_GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configuration'
 OIDC_GOOGLE_CLIENT_ID = os.environ.get('OIDC_GOOGLE_CLIENT_ID', '')

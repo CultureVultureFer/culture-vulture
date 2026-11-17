@@ -1,0 +1,40 @@
+# Copied from https://docs.docker.com/guides/django/#add-the-postgresql-driver
+# syntax=docker/dockerfile:1
+
+# Build stage: install dependencies into a virtual environment.
+FROM python:3.14-alpine3.23 AS builder
+
+# Prevent Python from writing .pyc files to disk.
+ENV PYTHONDONTWRITEBYTECODE=1
+# Prevent Python from buffering stdout/stderr so logs appear immediately.
+ENV PYTHONUNBUFFERED=1
+
+RUN pip install --quiet --root-user-action=ignore uv
+# Use copy mode since the cache and build filesystem are on different volumes.
+ENV UV_LINK_MODE=copy
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+# The production stage copies only the virtual environment and source code.
+FROM python:3.14-alpine3.23 AS production
+
+# Prevent Python from buffering stdout/stderr so logs appear immediately.
+ENV PYTHONUNBUFFERED=1
+# Activate the virtual environment copied from the build stage.
+ENV PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+# Copy only the pre-built virtual environment and application source code.
+COPY --from=builder /app/.venv /app/.venv
+COPY . .
+
+RUN python manage.py collectstatic --noinput
+
+EXPOSE 8000
+
+# Run migrations and start Gunicorn as the production WSGI server.
+CMD ["sh", "start.sh"]
