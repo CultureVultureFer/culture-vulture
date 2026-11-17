@@ -44,14 +44,14 @@
     User -> Web ++ : Upis pojma za pretraživanje
     Web -> API ++ : GET /api/events/?search={pojam}
 
-    API -> Ticketmaster : Dohvati događaje
+    API -> Ticketmaster ++ : Dohvati događaje
 
     alt Ticketmaster vrati grešku
         Ticketmaster --> API : HTTP error
         API --> Web : 502 s porukom greške
         Web --> User : Prikaži pogrešku
     else Ticketmaster vrati događaje
-        Ticketmaster --> API : Popis događaja
+        Ticketmaster --> API -- : Popis događaja
         API -> Store ++ : Spremi ili ažuriraj događaje
         Store --> API -- : Potvrda
         API -> Store ++ : Dohvati događaje koji odgovaraju pojmu pretrage
