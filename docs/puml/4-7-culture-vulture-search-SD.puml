@@ -52,7 +52,8 @@
         Web --> User : Prikaži pogrešku
     else Ticketmaster vrati događaje
         Ticketmaster --> API : Popis događaja
-        API -> Store : Spremi ili ažuriraj događaje
+        API -> Store ++ : Spremi ili ažuriraj događaje
+        Store --> API -- : Potvrda
         API -> Store ++ : Dohvati događaje koji odgovaraju pojmu pretrage
         Store --> API -- : Popis događaja
         API --> Web -- : 200 s popisom događaja
