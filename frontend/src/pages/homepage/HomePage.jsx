@@ -8,16 +8,16 @@ import { useState } from "react";
 
 function HomePage() {
   const [search, setSearch] = useState("");
-  const { data, isLoading, isError, error, isSuccess } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["events", search],
     queryFn: () => getEvents(search),
   });
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header onSearch={setSearch}></Header>
 
-      <main>
+      <main className="flex-grow">
         <Filters></Filters>
         <Events
           data={data}
@@ -27,8 +27,8 @@ function HomePage() {
         ></Events>
       </main>
 
-      <Footer isSuccess={isSuccess}></Footer>
-    </>
+      <Footer></Footer>
+    </div>
   );
 }
 
