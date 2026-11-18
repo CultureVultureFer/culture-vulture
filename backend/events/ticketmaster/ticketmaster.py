@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 load_dotenv()
 API_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
 
-def fetch_events(size: int):
+def fetch_events(size: int, city: str, startDateTime:str, endDateTime:str):
     key = os.getenv("TICKETMASTER_API_KEY")
     params = {
         "apikey": key,
-        "city": "Berlin",
-        "size": size
+        "city": city,
+        "size": size,
+        "startDateTime": startDateTime,
+        "endDateTime": endDateTime
     }
 
     res = httpx.get(API_URL, params=params, timeout=10.0)
