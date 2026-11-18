@@ -82,6 +82,7 @@ def categories_view(request):
 class EventListView(ListAPIView):
     queryset = Event.objects.all().order_by("start")
     serializer_class = EventSerializer
+    permission_classes = [IsOrganizerOrReadOnly]
     # F-008: ?search=<term> matches event name or organizer's organization name
     filter_backends = [SearchFilter]
     search_fields = ["event_name", "organizer__organization__name"]
@@ -112,3 +113,6 @@ class EventListView(ListAPIView):
                 status=status.HTTP_502_BAD_GATEWAY
             )
         return super().list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return _create_event(request)

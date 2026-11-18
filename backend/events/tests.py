@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest import mock
 
+import httpx
 from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import Organization, Role, User
@@ -481,17 +483,17 @@ class EventSearchTests(TestCase):
         Event.objects.create(
             event_name="Jazz večer",
             organizer=organizer,
-            start=datetime(2026, 12, 1, 20, 0, tzinfo=timezone.utc),
+            start=datetime(2026, 12, 1, 20, 0, tzinfo=UTC),
         )
         Event.objects.create(
             event_name="Simfonijski koncert",
             organizer=organizer,
-            start=datetime(2026, 12, 3, 20, 0, tzinfo=timezone.utc),
+            start=datetime(2026, 12, 3, 20, 0, tzinfo=UTC),
         )
         # No organizer, like events imported from Ticketmaster
         Event.objects.create(
             event_name="Jazz festival",
-            start=datetime(2026, 12, 2, 20, 0, tzinfo=timezone.utc),
+            start=datetime(2026, 12, 2, 20, 0, tzinfo=UTC),
         )
 
     def setUp(self):
