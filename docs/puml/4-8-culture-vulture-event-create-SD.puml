@@ -1,0 +1,64 @@
+' ==============================================================================
+' 4-8-culture-vulture-event-create-SD.puml
+'
+' Svrha:    Prikazuje dodavanje događaja od strane organizatora: unos podataka
+'           u formu, validaciju na poslužitelju i prikaz grešaka ispod polja.
+' Autor:    Vanda Meić, kolegij Programsko inženjerstvo
+' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
+'           autor ih je pregledao i odgovara za konačni sadržaj.
+' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
+'           ponašanjem klijenta i poslužitelja. Nazivi operacija su
+'           konceptualni i ne moraju se točno podudarati s implementacijom.
+'
+' Diagram level: Conceptual Interaction Design
+' Diagram type:  Sequence Diagram
+' Version:       1.0
+' ==============================================================================
+
+@startuml
+title Dodavanje događaja
+
+skinparam maxMessageSize 150
+    skinparam shadowing false
+    skinparam defaultFontName Arial
+    skinparam sequenceMessageAlign center
+    skinparam ArrowColor #212529
+
+    skinparam sequence {
+        ParticipantBackgroundColor #E7F1FF
+        ParticipantBorderColor #0D6EFD
+        ActorBackgroundColor #F8F9FA
+        ActorBorderColor #212529
+        LifeLineBorderColor #212529
+    }
+
+autonumber
+
+actor "Organizator" as User
+participant "Web-klijent" as Web <<UI>>
+participant "API za događaje" as API <<API>>
+participant "Usluga za događaje" as Service <<Application>>
+database "Spremište događaja" as Store <<Persistence>>
+
+User -> Web++ : Unos podataka događaja i pritisni <Publish>
+Web -> API++ : POST /api/events/
+
+alt Korisnik nije prijavljen ili nije organizator
+    API --> Web : 403
+    Web --> User : Prikaži opću poruku o grešci
+else Korisnik je organizator
+    API -> Service++ : createEvent(podaci, organizator)
+
+    alt Podaci nisu valjani
+        Service --> API : greške po poljima
+        API --> Web : 400 s greškama po poljima
+        Web --> User : Prikaži greške ispod polja
+    else Podaci su valjani
+        Service -> Store++ : saveEvent(podaci, organizator)
+        Store --> Service-- : Event object
+        Service --> API-- : uspjeh
+        API --> Web-- : 201 s podacima o događaju
+        Web --> User-- : Preusmjeri na popis događaja
+    end
+end
+@enduml
