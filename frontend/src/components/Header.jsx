@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { USER_DATA_QUERY_KEY, useUserData } from "../hooks/useUserData";
 import { useNavigate } from "react-router";
 
-function Header({ isSearchable = true }) {
+function Header({ isSearchable = true, onSearch }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useUserData();
@@ -24,12 +24,18 @@ function Header({ isSearchable = true }) {
   };
 
   return (
-    <header className="header">
+    <header className="header grid grid-cols-8 justify-center">
       <div className="hdiv2">
         <img src={logo1} alt="CultureVulture" className="logo1" />
         <p className="p1">Culture from a bird's eye view.</p>
       </div>
-      {isSearchable && <SearchBar></SearchBar>}
+      {isSearchable && (
+        <SearchBar
+          onSearch={onSearch}
+          className="col-span-6 justify-self-center"
+        ></SearchBar>
+      )}
+
       <div className="hdiv1 flex gap-7 items-center">
         <div>
           <Chip

@@ -24,6 +24,9 @@ export function deleteEvent(id) {
   return axios.delete(`${BACKEND_URL}/events/${id}/`);
 }
 
-export async function getEvents() {
-  return axios.get("/api/events/");
+export async function getEvents(searchString = "") {
+  const trimmed = searchString.trim();
+  return axios.get(`${BACKEND_URL}/events/`, {
+    params: trimmed ? { search: trimmed } : {},
+  });
 }

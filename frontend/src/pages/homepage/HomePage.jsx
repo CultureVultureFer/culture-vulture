@@ -4,16 +4,18 @@ import Filters from "./Filters";
 import Events from "./Events";
 import { useQuery } from "@tanstack/react-query";
 import { getEvents } from "../../api/events.js";
+import { useState } from "react";
 
 function HomePage() {
+  const [search, setSearch] = useState("");
   const { data, isLoading, isError, error, isSuccess } = useQuery({
-    queryKey: ["events"],
-    queryFn: getEvents,
+    queryKey: ["events", search],
+    queryFn: () => getEvents(search),
   });
 
   return (
     <>
-      <Header></Header>
+      <Header onSearch={setSearch}></Header>
 
       <main>
         <Filters></Filters>
