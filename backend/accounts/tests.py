@@ -83,7 +83,10 @@ class GoogleLoginTests(FakeGoogleMixin, TestCase):
         self.assertFalse(user.has_usable_password())
 
         me = self.client.get("/api/auth/me/").json()
-        self.assertEqual(me, {"id": str(user.pk), "username": "Marko Marić", "email": "marko@gmail.com", "role": "USER"})
+        self.assertEqual(
+            me,
+            {"id": str(user.pk), "username": "Marko Marić", "email": "marko@gmail.com", "role": "USER", "organization": None},
+        )
 
     def test_second_google_login_reuses_user(self):
         self.google_flow()
@@ -209,7 +212,9 @@ class OrganizerGoogleRegistrationTests(FakeGoogleMixin, TestCase):
         self.assertEqual(user.organization.name, "Klub Močvara")
         self.assertFalse(user.has_usable_password())
         self.assert_session_cleared()
-        self.assertEqual(self.client.get("/api/auth/me/").json()["role"], "ORGANIZER")
+        me = self.client.get("/api/auth/me/").json()
+        self.assertEqual(me["role"], "ORGANIZER")
+        self.assertEqual(me["organization"], "Klub Močvara")
 
     def test_existing_name_joins_organization(self):
         organization = Organization.objects.create(name="Klub Močvara")
