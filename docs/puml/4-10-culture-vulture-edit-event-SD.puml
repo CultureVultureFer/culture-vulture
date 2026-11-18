@@ -1,0 +1,98 @@
+' ==============================================================================
+' 4-10-culture-vulture-event-edit-SD.puml
+'
+' Svrha:    Prikazuje uređivanje postojećeg događaja od strane organizatora:
+'           dohvat događaja za popunjavanje forme, izmjenu podataka,
+'           validaciju na poslužitelju i prikaz grešaka ispod polja.
+' Autor:    Vanda Meić, kolegij Programsko inženjerstvo
+' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
+'           autor ih je pregledao i odgovara za konačni sadržaj.
+' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
+'           ponašanjem klijenta i poslužitelja. Nazivi operacija su
+'           konceptualni i ne moraju se točno podudarati s implementacijom.
+'
+' Diagram level: Conceptual Interaction Design
+' Diagram type:  Sequence Diagram
+' Version:       1.0
+' ==============================================================================
+
+@startuml
+title Uređivanje događaja
+
+skinparam maxMessageSize 150
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #212529
+
+skinparam sequence {
+    ParticipantBackgroundColor #E7F1FF
+    ParticipantBorderColor #0D6EFD
+    ActorBackgroundColor #F8F9FA
+    ActorBorderColor #212529
+    LifeLineBorderColor #212529
+}
+
+autonumber
+
+actor "Organizator" as User
+participant "Web-klijent" as Web <<UI>>
+participant "API za događaje" as API <<API>>
+participant "Usluga za događaje" as Service <<Application>>
+database "Spremište događaja" as Store <<Persistence>>
+
+' ==============================================================================
+' 1. Dohvat događaja i popunjavanje forme
+' ==============================================================================
+User -> Web++ : Pritisni <Edit> na događaju
+Web -> API++ : GET /api/events/{id}/
+API -> Service++ : getEvent(id)
+
+alt Događaj ne postoji
+    Service --> API : događaj ne postoji
+    API --> Web : 404
+    Web --> User : Prikaži "Event not found" i vrati na popis
+else Događaj postoji
+    Service -> Store++ : findEvent(id)
+    Store --> Service-- : Event object
+    Service --> API-- : događaj
+    API --> Web-- : 200 s podacima o događaju
+    Web --> User : Prikaži popunjenu formu
+
+    ' ==============================================================================
+    ' 2. Spremanje izmjena
+    ' ==============================================================================
+    User -> Web : Promijeni podatke i pritisni <Save>
+    Web -> API++ : PATCH /api/events/{id}/
+
+    alt Korisnik nije prijavljen ili nije organizator
+        API --> Web : 403
+        Web --> User : Prikaži opću poruku o grešci
+    else Korisnik je organizator
+        API -> Service++ : updateEvent(id, podaci, organizator)
+
+        alt Događaj ne postoji
+            Service --> API : događaj ne postoji
+            API --> Web : 404
+            Web --> User : Prikaži "Event not found" i vrati na popis
+        else Događaj postoji, ali korisnik nije autor
+            Service --> API : zabranjeno
+            API --> Web : 403
+            Web --> User : Prikaži opću poruku o grešci
+        else Događaj postoji i korisnik je autor
+        
+            alt Podaci nisu valjani
+                Service --> API : greške po poljima
+                API --> Web : 400 s greškama po poljima
+                Web --> User : Prikaži greške ispod polja
+            else Podaci su valjani
+                Service -> Store++ : updateEvent(id, podaci)
+                Store --> Service-- : Event object
+                Service --> API-- : uspjeh
+                API --> Web-- : 200 s podacima o događaju
+                Web --> User-- : Preusmjeri na popis događaja
+            end
+        end
+    end
+end
+@enduml
