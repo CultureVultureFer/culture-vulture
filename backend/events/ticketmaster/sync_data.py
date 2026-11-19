@@ -1,9 +1,9 @@
-from events.models import Event
+from events.models import Event, UpdateTracker
 from events.ticketmaster.ticketmaster import fetch_events
 from events.ticketmaster.processing import process_one_event
 
-def sync_events():
-    events = fetch_events(100)
+def sync_events(event_count: int, city: str, startDateTime: str, endDateTime: str):
+    events = fetch_events(size=event_count, city=city, startDateTime=startDateTime, endDateTime=endDateTime)
     created = 0
     updated = 0
 

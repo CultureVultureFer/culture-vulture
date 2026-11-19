@@ -31,12 +31,13 @@ class Event(models.Model):
     def __str__(self):
         return self.event_name
 class UpdateTracker(models.Model):
-    next_update = models.DurationField()
-    update_frequency = models.TimeField()
-    event_lower_bound = models.TimeField()
-    event_upper_bound = models.TimeField()
+    update_period = models.DurationField(null=True, blank=True)
+    next_update_datetime = models.DateTimeField(null=True, blank=True)
+    upper_bound = models.DateTimeField(null=True, blank=True)
+    lower_bound = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
-        return f"Next update at {self.next_update}, frequency of {self.update_frequency}"
+        return f"Next update at {self.next_update_datetime}, period of {self.update_period}"
 
 class Comments(models.Model):
     # CASCADE: deleting an event (F-004) also deletes its comments.

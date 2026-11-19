@@ -1,15 +1,18 @@
+from django.shortcuts import render, get_object_or_404
 import httpx
-from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from accounts.permissions import IsOrganizer, IsOrganizerOrReadOnly
-from events.models import Category, Event
+from events.models import Category, Event, UpdateTracker
 from events.serializers import CategorySerializer, EventDetailSerializer, EventSerializer
 from events.ticketmaster.sync_data import sync_events
 
+
+from datetime import timedelta
+from django.utils import timezone
 
 def _detailed_events():
     # Loads the organizer, their organization and the categories up front,
@@ -27,13 +30,24 @@ def events_view(request):
 
 
 def _list_events():
-    try:
-        sync_events()
-    except httpx.HTTPError:
-        return Response(
-            {"error": "Ticketmaster API error"},
-            status=status.HTTP_502_BAD_GATEWAY
-        )
+    now = timezone.now()
+    start_datetime = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_datetime = (now + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    update_checks = UpdateTracker.objects.all()
+    for update in update_checks:
+        print(update)
+        if update.next_update_datetime >= timezone.now():
+            try:
+                sync_events(event_count=100, city="Berlin", startDateTime=start_datetime, endDateTime=end_datetime)
+            except httpx.HTTPError:
+                return Response(
+                    {"error": "Ticketmaster API error"},
+                    status=status.HTTP_502_BAD_GATEWAY
+                )
+            update.next_update_datetime = now + update.update_period
+            update.save()
+
     events = Event.objects.all().order_by("start")
 
     serializer = EventSerializer(events, many = True)
@@ -42,7 +56,6 @@ def _list_events():
         status=status.HTTP_200_OK
     )
 
-
 def _create_event(request):
     serializer = EventDetailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -50,6 +63,20 @@ def _create_event(request):
     serializer.save(organizer=request.user)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
+
+
+@api_view(["GET"])
+@permission_classes([IsOrganizer])
+def my_events_view(request):
+    events = _detailed_events().filter(organizer=request.user).order_by("start")
+    return Response(EventDetailSerializer(events, many=True).data)
+
+
+@api_view(["GET"])
+def categories_view(request):
+    categories = Category.objects.order_by("category_name")
+    return Response(CategorySerializer(categories, many=True).data)
 
 @api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([IsOrganizerOrReadOnly])
@@ -73,16 +100,3 @@ def event_detail_view(request, event_id):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(serializer.data)
-
-
-@api_view(["GET"])
-@permission_classes([IsOrganizer])
-def my_events_view(request):
-    events = _detailed_events().filter(organizer=request.user).order_by("start")
-    return Response(EventDetailSerializer(events, many=True).data)
-
-
-@api_view(["GET"])
-def categories_view(request):
-    categories = Category.objects.order_by("category_name")
-    return Response(CategorySerializer(categories, many=True).data)
