@@ -25,18 +25,16 @@ function Header({ isSearchable = true, onSearch }) {
 
   return (
     <header className="header grid grid-cols-8 justify-center">
-      <div className="hdiv2">
+      <div className="hdiv2 col-span-2">
         <img src={logo1} alt="CultureVulture" className="logo1" />
         <p className="p1">Culture from a bird's eye view.</p>
       </div>
-      {isSearchable && (
-        <SearchBar
-          onSearch={onSearch}
-          className="col-span-6 justify-self-center"
-        ></SearchBar>
-      )}
-
-      <div className="hdiv1 flex gap-7 items-center">
+      <div className="col-span-4 justify-self-center w-full">
+        {isSearchable && (
+          <SearchBar onSearch={onSearch} className="w-full"></SearchBar>
+        )}
+      </div>
+      <div className="flex gap-3 justify-self-center items-center justify-center col-span-2">
         <div>
           <Chip
             size="lg"

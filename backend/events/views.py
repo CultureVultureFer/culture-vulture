@@ -33,8 +33,6 @@ def events_view(request):
     return _list_events()
 
 
-def _list_events():
-
 def _create_event(request):
     serializer = EventDetailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -105,13 +103,6 @@ class EventListView(ListAPIView):
                     )
                 update.next_update_datetime = now + update.update_period
                 update.save()
-        try:
-            sync_events()
-        except httpx.HTTPError:
-            return Response(
-                {"error": "Ticketmaster API error"},
-                status=status.HTTP_502_BAD_GATEWAY
-            )
         return super().list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
