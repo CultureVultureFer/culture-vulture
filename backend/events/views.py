@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 import httpx
 
 from django.shortcuts import get_object_or_404
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import ListAPIView
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -82,8 +82,9 @@ class EventListView(ListAPIView):
     serializer_class = EventSerializer
     permission_classes = [IsOrganizerOrReadOnly]
     # F-008: ?search=<term> matches event name or organizer's organization name
-    filter_backends = [SearchFilter]
+    filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["event_name", "organizer__organization__name"]
+    ordering = ["start", "event_id"]
 
     def list(self, request, *args, **kwargs):
         now = timezone.now()
