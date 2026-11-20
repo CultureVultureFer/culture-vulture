@@ -46,3 +46,7 @@ export async function getUserData() {
     throw error;
   }
 }
+
+export function logout() {
+  return axios.post(`${BACKEND_URL}/auth/logout/`);
+}
