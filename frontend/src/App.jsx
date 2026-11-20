@@ -13,6 +13,7 @@ import {
   CsrfGuard,
   GuestOnly,
 } from "./components/RouteGuards.jsx";
+import EventPage from "./pages/EventPage/EventPage.jsx";
 
 const queryClient = new QueryClient();
 function App() {
@@ -30,6 +31,7 @@ function App() {
               <Route element={<Authenticated />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="hello" element={<HomePage />} />
+                <Route path="events/:id" element={<EventPage />} />
               </Route>
 
               <Route element= {<Authenticated role="ORGANIZER" />}>

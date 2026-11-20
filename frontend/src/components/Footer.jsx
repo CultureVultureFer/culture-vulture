@@ -3,9 +3,7 @@ import logo2 from "../assets/logo2.svg";
 
 function Footer({ isSuccess }) {
   return (
-    <footer
-      className={"footer w-full bottom-0 " + (!isSuccess ? " absolute" : "")}
-    >
+    <footer className="footer w-full">
       <div className="fdiv2">
         <img src={logo2} alt="CultureVulture2" className="logo2" />
         <div className="fdiv1">

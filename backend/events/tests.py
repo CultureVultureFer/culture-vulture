@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest import mock
 
+import httpx
 from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import Organization, Role, User
@@ -465,3 +467,82 @@ class ReadEventTests(EventApiTestCase):
             ["education", "festivals", "music", "sport", "theatre"],
         )
         self.assertEqual(set(resp.json()[0]), {"id", "category_name"})
+
+class EventSearchTests(TestCase):
+    """F-008: events can be searched by event name or organizer's organization name."""
+
+    @classmethod
+    def setUpTestData(cls):
+        organization = Organization.objects.create(name="Lisinski")
+        organizer = User.objects.create_user(
+            "marko",
+            "marko@example.com",
+            role=Role.get(Role.ORGANIZER),
+            organization=organization,
+        )
+        Event.objects.create(
+            event_name="Jazz večer",
+            organizer=organizer,
+            start=datetime(2026, 12, 1, 20, 0, tzinfo=UTC),
+        )
+        Event.objects.create(
+            event_name="Simfonijski koncert",
+            organizer=organizer,
+            start=datetime(2026, 12, 3, 20, 0, tzinfo=UTC),
+        )
+        # No organizer, like events imported from Ticketmaster
+        Event.objects.create(
+            event_name="Jazz festival",
+            start=datetime(2026, 12, 2, 20, 0, tzinfo=UTC),
+        )
+
+    def setUp(self):
+        # Never call the real Ticketmaster API from tests
+        self.sync_events = mock.patch("events.views.sync_events").start()
+        self.addCleanup(mock.patch.stopall)
+
+    def get_event_names(self, **params):
+        response = self.client.get(reverse("get_events"), params)
+        self.assertEqual(response.status_code, 200)
+        return [event["event_name"] for event in response.json()]
+
+    def test_without_search_returns_all_events_ordered_by_start(self):
+        self.assertEqual(
+            self.get_event_names(),
+            ["Jazz večer", "Jazz festival", "Simfonijski koncert"],
+        )
+
+    def test_search_by_event_name_is_case_insensitive(self):
+        self.assertEqual(self.get_event_names(search="JAZZ"), ["Jazz večer", "Jazz festival"])
+
+    def test_search_by_organization_name(self):
+        self.assertEqual(
+            self.get_event_names(search="lisinski"),
+            ["Jazz večer", "Simfonijski koncert"],
+        )
+
+    def test_search_matches_part_of_organization_name(self):
+        self.assertEqual(
+            self.get_event_names(search="lisin"),
+            ["Jazz večer", "Simfonijski koncert"],
+        )
+
+    def test_search_does_not_match_organizer_username(self):
+        self.assertEqual(self.get_event_names(search="marko"), [])
+
+    def test_all_search_terms_must_match(self):
+        self.assertEqual(self.get_event_names(search="jazz lisinski"), ["Jazz večer"])
+
+    def test_event_without_organizer_is_found_by_name(self):
+        self.assertEqual(self.get_event_names(search="festival"), ["Jazz festival"])
+
+    def test_search_without_matches_returns_empty_list(self):
+        self.assertEqual(self.get_event_names(search="balet"), [])
+
+    def test_ticketmaster_error_returns_502(self):
+        self.sync_events.side_effect = httpx.HTTPError("Ticketmaster down")
+
+        response = self.client.get(reverse("get_events"))
+
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(response.json(), {"error": "Ticketmaster API error"})

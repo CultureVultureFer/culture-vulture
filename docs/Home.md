@@ -59,6 +59,7 @@ README repozitorija sadrži projektnu [izjavu o uporabi umjetne inteligencije](.
  
 Kratak sažetak: [README – Uporaba umjetne inteligencije](../README.md#uporaba-umjetne-inteligencije). Ovaj odjeljak bilježi koji su alati korišteni, za koju dokumentaciju ili kod te kako je tim provjerio rezultat. Slijedi FER-ova [pravila o primjerenoj uporabi umjetne inteligencije](https://www.fer.unizg.hr/_download/repository/Policy%20on%20the%20appropriate%20use%20of%20artificial%20intelligence%20at%20the%20faculty%20of%20electrical%20engineering%20and%20computing%5B1%5D.pdf).
 
+<a id="ai-usage"></a>
 ### Korišteni alati
  
 | Alat | Inačica ili model | Koristio/la | Glavna svrha |
