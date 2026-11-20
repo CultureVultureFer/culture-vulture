@@ -1,6 +1,5 @@
-' Initial version of ER diagram,
-' SESSIONS, and OAUTH_ACCOUNTS are likely to be reconfigured
-' Version: 1.2
+' Autor: Matija Krivec
+' Version: 1.3
 ' 
 
 @startuml
