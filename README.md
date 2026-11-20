@@ -1,72 +1,97 @@
-# Programsko inženjerstvo
+# CultureVulture
 
-# Opis projekta
+CultureVulture pruža svim korisnicima pregled budućih događaja za Berlin (za potrebe prve predaje), a organizatorima mogućnost objave vlastitih događaja.
 
-Ovaj projekt je rezultat timskog rada u sklopu projektnog zadatka kolegija [Programsko inženjerstvo](https://www.fer.unizg.hr/predmet/proinz) na Fakultetu elektrotehnike i računarstva
-Sveučilišta u Zagrebu
+**Projekt na kolegiju:** Ovu je aplikaciju razvio studentski tim u sklopu kolegija [Programsko inženjerstvo](https://www.fer.unizg.hr/predmet/proinz) na Fakultetu elektrotehnike i računarstva Sveučilišta u Zagrebu (FER).
 
-Kao projektni zadatak radit ćemo aplikaciju **CultureVulture**.
-Koristeći vanjski API aplikacija će dohvaćati podatke o događajima, spremati ih u našu bazu i prikazivati ih na jednom mjestu.
-Prvotno smo planirali koristiti Entrio, ali on nema javno dostupan API, tako da još biramo koji izvor ćemo koristiti.
-Autentifikacija korisnika provodit će se preko vanjskog servisa koristeći OAuth 2.0.
+## Opis aplikacije
 
-## Uloge
+Prikaz događaja s vanjskog izvora ili kreiranih od strane organizatora, pretraživanje događaja, prikaz događaja na karti, dodavanje događaja u kalendar, ostavljanje komentara i recenzija.
 
-U aplikaciji postoje tri vrste korisnika: korisnik, organizator i administrator. Uloge se razlikuju po dopuštenjima koja imaju
 
-### Korisnik
+Mnogi gradovi Europe sadrže mnoga kulturna i društvena zbivanja poput koncerata, predstava, utakmica, sajmova i festivala. Međutim, budući da su informacije o tim događajima sadržane na pojedinim stranicama institucija ili organizatora, korisnicima može biti teško dobiti pregled nadolazećih događaja koji se održavaju u gradu. Aplikacija CultureVulture rješava taj problem agregiranjem informacija o kulturnim događajima te izravnim povezivanjem organizatora i korisnika dostupnim objavama na samoj aplikaciji.
 
-Korisnik može koristiti aplikaciju za pretraživanje događaja po imenu događaja ili organizatora. Može filtrirati događaje po kategorijama i sortirati po datumu događaja ili abecedno. Korisnik može odabrati radijus oko svoje trenutne lokacije i vidjeti događaje u svojoj blizini.
-Korisnik događaj može dodati u svoj Google kalendar kako na njega ne bi zaboravio, a nakon događaja može ostaviti komentar i recenziju kao povratnu informaciju.
+**Ključne funkcionalnosti**
+- Pregled događaja za obične korisnike
+- Kreiranje događaja za organizatore
 
-### Organizator
+Za potpuni opseg, zahtjeve, oblikovanje i dokaze ispitivanja pogledajte [docs](docs/Home.md).
 
-Organizatori mogu objavljivati svoje vlastite događaje direktno u aplikaciji. Pri objavi unose datum i vrijeme početka i završetka događaja, cijenu ulaznice, kratki opis i kategoriju, npr. glazba, kazalište, sport, sajmovi.
+<a id="deployment"></a>
+## Postavljanje (engl. deployment)
 
-### Administrator
+<!-- UPUTA: Ovaj odjeljak opisuje već postavljenu aplikaciju koju se može otvoriti i isprobati bez lokalnog pokretanja izvornog koda.
+Za Iteraciju 1 i Završni pregled navedite konkretne podatke. Provjerite vodi li URL na javno dostupnu pokrenutu aplikaciju i radi li navedeni tijek uporabe. Nikada ne objavljujte lozinke ni pristupne tokene. -->
 
-Administrator ima pregled nad cijelom aplikacijom. Može upravljati događajima, profilima korisnika i organizatora.
+**Javno dostupna aplikacija:** https://culture-vulture-front.up.railway.app/ (frontend), https://culture-vulture-production.up.railway.app/admin/login/?next=/admin/ (backend – administratori)
 
-# Cilj i motivacija
+**Isprobajte:** 
+Nakon prijave kao korisnik, početni zaslon će prikazivati popis događaja koje je aplikacija pohranila. Nakon prijave kao organizator, u gornjem desnom kutu aplikacije prikazat će se i gumb za kreiranje vlastitih događaja (POST EVENT) pomoću kojeg organizatori mogu objaviti vlastite događaje.
 
-Ideja koja je dovela do ovog projekta zapravo je proizašla iz toga da je više ljudi u timu primijetilo kako dosta često vide plakate i objave događaja koji su već prošli, a na njega su zapravo htjeli otići. Naše rješenje je napraviti aplikaciju koja će sve to objediniti na jednom mjestu dohvaćanjem podataka s vanjskog API-ja.
+**Demonstracija:** Prijava kao obični korisnik može se obaviti pomoću Googlea na https://culture-vulture-front.up.railway.app ako korisnik nije prijavljen; ako jest, mora se prvo odjaviti. Ako se želite prijaviti kao organizator MORATE koristiti drugi Google račun, a ne onaj kojim ste se prijavili kao obični korisnik. Nakon odjave (ako ste bili prijavljeni kao obični korisnik), ponovnim odlaskom na https://culture-vulture-front.up.railway.app i klikom na `Want to become an organizer? Register here` ili izravnim odlaskom na https://culture-vulture-front.up.railway.app/org/register možete se registrirati kao organizator.
 
-# Funkcijski zahtjevi
+[Vodič za postavljanje i pokretanje](docs/6-Postavljanje-instalacija-i-konfiguracija.md) opisuje smještaj aplikacije (engl. hosting) koji tim stvarno koristi. Tim može koristiti Render ili drugu platformu koju ste dogovorili s asistentom/demonstratorom.
 
-| ID zahtjeva | Opis | Prioritet | Izvor | Kriteriji prihvaćanja |
-|---|---|---|---|---|
-| F-001 | Sustav korisnicima omogućuje registraciju putem OAuth 2.0 autentifikacije | Visok | Specifikacija projekta | Korisnik može kreirati račun i uspješno se prijaviti. |
-| F-002 | Sustav omogućuje komentiranje i recenziju događaja | Srednji | Specifikacija projekta | Korisnik uspješno komentira i ocjenjuje događaj. |
-| F-003 | Sustav podatke dohvaća s vanjskog API-a | Visok | Specifikacija projekta | Dohvaćeni podatci vidljivi su u aplikaciji. |
-| F-004 | Organizator može uređivati i brisati vlastiti događaj | Visok | Zahtjev dionika | Promjene za događaj su vidljive i obrisani događaji se više ne prikazuju korisnicima. |
-| F-005 | Lokacija događaja prikazana je na karti | Srednji | Specifikacija projekta | Događaj je vidljiv na karti i lokacija je jednaka navedenoj lokaciji. |
-| F-006 | Korisnik može vidjeti događaj u odabranom radijusu svoje trenutne lokacije | Srednji | Specifikacija projekta | Nakon odabira radijusa prikazuju se događaji u odabranom radijusu. |
-| F-007 | Korisnik može uređivati i obrisati svoj profil | Visok | Zahtjev dionika | Promjene profila su vidljive, a nakon brisanja profila korisnik se više ne može prijaviti s tim računom. |
-| F-008 | Korisnik može pretraživati događaje po nazivu događaja ili organizatora | Visok | Specifikacija projekta | Prikazani su samo rezultati koji odgovaraju upisanom nazivu ili organizatoru. |
-| F-009 | Korisnik događaj može dodati u Google kalendar | Srednji | Specifikacija projekta | Događaj uspješno dodan u Google kalendar s ispravnim datumom i vremenom događaja. |
-| F-010 | Organizator može dodavati vlastite događaje | Visok | Specifikacija projekta | Dodani događaj vidljiv je korisnicima i vidljivi su svi uneseni podaci. |
-| F-011 | Organizator može pregledati popis svojih objavljenih događaja | Srednji | Zahtjev dionika | Organizator na jednom mjestu može vidjeti i upravljati svojim događajima. |
-| F-012 | Administrator ima mogućnost upravljanja događajima | Visok | Specifikacija projekta | Administrator može obrisati bilo koji događaj ili komentar, a obrisani sadržaj više nije vidljiv. |
-| F-013 | Administrator može upravljati profilima korisnika i organizatora | Visok | Specifikacija projekta | Administrator može pogledati i obrisati bilo koji profil. |
-| F-014 | Korisnik može pogledati detalje događaja | Visok | Zahtjev dionika | Nakon što korisnik klikne na događaj prikazuju se detalji o događaju. |
-| F-015 | Korisnik može događaje poredati po datumu ili abecedno | Srednji | Zahtjev dionika | Događaji uspješno poredani ovisno o odabranom načinu sortiranja. |
-| F-016 | Korisnik može filtrirati događaje po kategoriji | Visok | Specifikacija projekta | Odabirom jedne ili više kategorija prikazani događaji sužavaju se na odabrane kategorije. |
-| F-017 | Korisnik može brisati vlastite komentare | Srednji | Zahtjev dionika | Nakon brisanja komentar više nije vidljiv. |
+<a id="quick-start"></a>
+## Brzi početak / instalacija
 
-# Tehnologije
+**Preduvjeti:** [Navedite potrebno izvršno okruženje (engl. runtime) i verzija, upravitelj paketa (engl. package manager), baza podataka ili vanjska usluga ako je nužna.]
 
-- Frontend: React
-- Backend: Django
-- Database: PostgreSQL
-- Project management: GitHub, tbd
-- Vanjski servisi: OAuth 2.0, izvor događaja (tbd), Google Maps API, Google Calendar API
+```bash
+git clone [repository URL]
+cd [repository directory]
+[install dependencies]
+[run the application]
+```
 
-# Članovi tima
+**Adresa:** [Stvarna adresa koju aplikacija ispiše nakon pokretanja.]
 
-- Karlo Čehulić: Team Lead
-- Ivan Bunić: Frontend engineer
-- Matija Krivec: Backend engineer
-- Roko Gulić: Backend engineer
-- Tomislav Facković: Frontend engineer
-- Vanda Meić: Frontend engineer
-- Tibor Brestovac: Backend engineer
+**Konfiguracija:** [Navedite potrebne varijable okruženja (engl. environment variables) ili uputite na sigurnu datoteku `.env.example`; objasnite gdje se dobivaju vrijednosti. Nikada ne stavljajte stvarne pristupne podatke u ovu datoteku, primjer konfiguracije, snimke zaslona, zapise ni zapise promjena (engl. commits).]
+
+[Dodajte kratak korak provjere, primjerice koja se stranica treba otvoriti ili koja naredba pokreće osnovnu provjeru.] Za detaljno postavljanje pogledajte [projektnu dokumentaciju](docs/Home.md).
+
+## Tehnologije
+
+Navedite nekoliko tehnologija i vanjskih usluga koje bitno određuju kako vaša aplikacija radi. Za svaku navedite njezinu konkretnu ulogu i jedan razlog ili ograničenje važno za projekt. Alat za razvoj ili ispitivanje uključite samo ako je njegova uloga važna za razumijevanje načina na koji je projekt izrađen ili provjeren. Nemojte prepisivati popis ovisnosti (engl. dependencies), statistiku programskih jezika ni popis razvojnih okruženja i komunikacijskih alata. Tablicu provjerite prema stvarnom repozitoriju i pokrenutoj aplikaciji; potrebne verzije i konfiguraciju dokumentirajte u vodiču za instalaciju.
+
+| Tehnologija ili alat | Uloga u ovom projektu | Razlog uporabe ili važno ograničenje |
+| --- | --- | --- |
+| Docker | Pruža produkcijske i razvojne slike aplikacije | Aplikacija je postavljena (engl. deployed) pomoću produkcijskih slika, a timu je olakšano pokretanje bilo koje inačice aplikacije putem datoteke docker-compose.yml |
+| Django | Backend | Sadrži sve API-je, usluge i poslovnu logiku aplikacije te web sučelje za administratore |
+| React  | Frontend | Web sučelje |
+| PostgreSQL | Baza | Sadrži podatke o korisnicima, događajima... |
+| TicketMaster | Vanjski API | Služi za dohvat relevantnih događaja koji nisu nužno kreirani na CultureVulture aplikaciji, povećava popis događaja |
+
+<a id="team-members"></a>
+## Članovi tima
+
+| Član | Glavna uloga ili doprinos |
+| --- | --- |
+| Karlo Čehulić | Team Lead |
+| Ivan Bunić | Frontend engineer |
+| Matija Krivec | Backend engineer |
+| Roko Gulić | Backend engineer |
+| Tomislav Facković | Frontend engineer |
+| Vanda Meić | Frontend engineer |
+| Tibor Brestovac | Backend engineer |
+
+<a id="license"></a>
+## Status licence: MIT
+
+<a id="ai-usage"></a>
+## Uporaba umjetne inteligencije [![AI Usage: Disclosed](https://img.shields.io/badge/AI%20Usage-Disclosed-blue.svg)](https://www.fer.unizg.hr/_download/repository/Policy%20on%20the%20appropriate%20use%20of%20artificial%20intelligence%20at%20the%20faculty%20of%20electrical%20engineering%20and%20computing%5B1%5D.pdf)
+
+Ovaj projekt slijedi FER-ova [pravila o primjerenoj uporabi umjetne inteligencije](https://www.fer.unizg.hr/_download/repository/Policy%20on%20the%20appropriate%20use%20of%20artificial%20intelligence%20at%20the%20faculty%20of%20electrical%20engineering%20and%20computing%5B1%5D.pdf).
+
+**Izjava:** [Navedite jesu li korišteni alati umjetne inteligencije. Ako jesu, navedite alate i njihove glavne namjene te objasnite kako je tim pregledao nastali kod ili tekst i kako može objasniti vlastiti doprinos. Ako nisu korišteni, to jasno navedite. U alate umjetne inteligencije nemojte unositi privatne podatke, pristupne podatke ni tuđe zaštićene materijale.]
+
+[Ako je za ovaj projekt potreban detaljniji zapis uporabe umjetne inteligencije, postavite poveznicu na njegovo jedinstveno mjerodavno mjesto u dokumentaciji.]
+
+<a id="code-of-conduct-and-support"></a>
+## Kodeks ponašanja i podrška [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
+Od članova tima očekuje se pridržavanje **Kodeksa ponašanja studenata** Fakulteta elektrotehnike i računarstva Sveučilišta u Zagrebu, pravila timskog rada na kolegiju i [Etičkog kodeksa IEEE-a](https://www.ieee.org/about/corporate/governance/p7-8.html). [Postavite poveznicu na `CODE_OF_CONDUCT.md` ako se ta datoteka koristi u vašem repozitoriju.]
+
+---
+
+Struktura dokumentacije prilagođena je predlošku kolegija Programsko inženjerstvo FER-a autora [Vlade Sruka](https://www.fer.unizg.hr/vlado.sruk), licenciranom pod [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Aplikaciju i njezin sadržaj izradio je gore navedeni studentski tim.
