@@ -4,18 +4,20 @@ import Filters from "./Filters";
 import Events from "./Events";
 import { useQuery } from "@tanstack/react-query";
 import { getEvents } from "../../api/events.js";
+import { useState } from "react";
 
 function HomePage() {
-  const { data, isLoading, isError, error, isSuccess } = useQuery({
-    queryKey: ["events"],
-    queryFn: getEvents,
+  const [search, setSearch] = useState("");
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["events", search],
+    queryFn: () => getEvents(search),
   });
 
   return (
-    <>
-      <Header></Header>
+    <div className="flex flex-col min-h-screen">
+      <Header onSearch={setSearch}></Header>
 
-      <main>
+      <main className="flex-grow">
         <Filters></Filters>
         <Events
           data={data}
@@ -25,8 +27,8 @@ function HomePage() {
         ></Events>
       </main>
 
-      <Footer isSuccess={isSuccess}></Footer>
-    </>
+      <Footer></Footer>
+    </div>
   );
 }
 
