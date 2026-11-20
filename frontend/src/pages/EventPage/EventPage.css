@@ -1,0 +1,11 @@
+.event-page{
+    background-color: #f7f7ec;
+}
+.event-page-content {
+    width: 100%;
+    max-width: 1800px; 
+    margin: 0 auto;    
+    padding: 2rem 11rem; 
+    
+    
+}

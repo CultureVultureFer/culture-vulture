@@ -48,7 +48,7 @@ def _list_events():
             update.next_update_datetime = now + update.update_period
             update.save()
 
-    events = Event.objects.all().order_by("start")
+    events = Event.objects.all().order_by("start", "event_id")
 
     serializer = EventSerializer(events, many = True)
     return Response(
@@ -69,7 +69,7 @@ def _create_event(request):
 @api_view(["GET"])
 @permission_classes([IsOrganizer])
 def my_events_view(request):
-    events = _detailed_events().filter(organizer=request.user).order_by("start")
+    events = _detailed_events().filter(organizer=request.user).order_by("start", "event_id")
     return Response(EventDetailSerializer(events, many=True).data)
 
 
