@@ -1,0 +1,52 @@
+' Autor: Matija Krivec
+' Verzija 1.0
+' Dijagram prikazuje dobivanje događaja do Home Page-a
+@startuml
+
+title get events
+
+skinparam maxMessageSize 150
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #212529
+
+skinparam sequence {
+    ParticipantBackgroundColor #E7F1FF
+    ParticipantBorderColor #0D6EFD
+    ActorBackgroundColor #F8F9FA
+    ActorBorderColor #212529
+    LifeLineBorderColor #212529
+}
+
+actor User
+participant WebSucelje
+participant Backend
+database Database
+participant TicketmasterAPI
+
+User -> WebSucelje: Open Home Page
+activate WebSucelje
+WebSucelje -> Backend: GET api/events/
+activate Backend
+
+ref over Backend, TicketmasterAPI, Database
+   Keep ticketmaster events up to date
+end ref
+
+opt HTTP error during up to date
+   Backend-->WebSucelje: Error
+   WebSucelje-->User: Show Error
+else no error
+
+Backend --> Database: get events
+activate Database
+Database --> Backend: events data
+deactivate Database
+
+Backend--> WebSucelje: events data
+deactivate Backend
+
+WebSucelje-->User: Load Events on Page
+end
+@enduml

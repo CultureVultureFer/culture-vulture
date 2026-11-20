@@ -1,4 +1,6 @@
-' Purpose: Shows how ticketmaster events are kept up to date
+' Autor: Matija Krivec
+' Verzija 1.0
+' Dijagram prikazuje postupak kojim se podaci o događajima ažuriraju
 @startuml
 
 title Keep ticketmaster events up to date
