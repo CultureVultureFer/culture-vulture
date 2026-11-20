@@ -50,7 +50,7 @@ export default function EventFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myEvents"] });
       queryClient.invalidateQueries({ queryKey: ["event", id] });
-      navigate("/organizer/events");
+      navigate("/");
     },
     onError: (error) => {
       if (!applyServerErrors(error, setError)) {
@@ -106,7 +106,7 @@ export default function EventFormPage() {
               <label className="text-xl  text-primary-text">Event title</label>
               <input
                 placeholder="Enter event title"
-                className={inputBox} 
+                className={inputBox}
                 {...register("event_name", {
                   required: "Event name is required",
                 })}
