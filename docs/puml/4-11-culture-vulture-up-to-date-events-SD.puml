@@ -1,0 +1,79 @@
+' Purpose: Shows how ticketmaster events are kept up to date
+@startuml
+
+title Keep ticketmaster events up to date
+
+skinparam maxMessageSize 150
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #212529
+
+skinparam sequence {
+    ParticipantBackgroundColor #E7F1FF
+    ParticipantBorderColor #0D6EFD
+    ActorBackgroundColor #F8F9FA
+    ActorBorderColor #212529
+    LifeLineBorderColor #212529
+}
+
+participant ServisZaDogadaje
+participant TicketmasterAPI
+database Database
+
+activate ServisZaDogadaje
+
+ServisZaDogadaje->Database: get update tracker data
+activate Database
+Database--> ServisZaDogadaje: update tracker data
+deactivate Database
+
+opt too long since last update
+
+    ServisZaDogadaje->TicketmasterAPI: GET discovery/v2/events
+    activate TicketmasterAPI
+
+    alt HTTP error
+        TicketmasterAPI --> ServisZaDogadaje: HTTP error
+        ServisZaDogadaje->ServisZaDogadaje: exit early
+    else HTTP OK
+        TicketmasterAPI-->ServisZaDogadaje: return events
+        deactivate TicketmasterAPI
+
+
+
+        loop for each event
+            ServisZaDogadaje->Database: get event by id
+            activate Database
+            Database-->ServisZaDogadaje: event or none
+            deactivate Database
+
+            alt event is new
+
+            ServisZaDogadaje->Database: add new event
+            activate Database
+            Database-->ServisZaDogadaje: Confirm
+            deactivate Database
+
+            else event exists with old data
+
+            ServisZaDogadaje->Database: update event data
+            activate Database
+            Database-->ServisZaDogadaje: Confirm
+            deactivate Database
+
+            else event is unchanged
+            note right: No operation required
+            end
+
+        ServisZaDogadaje->Database: Set next update time limit
+        activate Database
+        Database --> ServisZaDogadaje: Confirm
+        deactivate Database
+        end
+
+        deactivate ServisZaDogadaje
+    end
+end
+
+@enduml
