@@ -9,7 +9,7 @@
 | **Struktura podsustava** | Koji su glavni dijelovi i kako komuniciraju? | Dijagram komponenata |
 | **Model podataka** | Kako su strukturirani trajni podaci programa? | Relacijski ER dijagram |
 | **Struktura koda** | Kako su dodijeljene odgovornosti i ključne klase? | Reprezentativni dijagram razreda |
-| **Dinamičko ponašanje** | Kako moduli surađuju pri obradi ključnih transakcija? | sekvencijski dijagram |
+| **Dinamičko ponašanje** | Kako moduli surađuju pri obradi ključnih transakcija? | Sekvencijski dijagram |
 | **Stanja sustava** | Kako ključni domenski objekt mijenja svoja stanja? | Dijagram stanja |
 | **Fizički razmještaj** | Na kojim se izvršnim čvorovima program izvodi? | Dijagram razmještaja (poglavlje 6) |
 
@@ -23,9 +23,9 @@ Za svaki UML dijagram čuvajte čitljivu sliku i PlantUML izvor, kako je opisano
 
 | Odluka | Razmatrana alternativa | Projektno specifično obrazloženje i kompromis |
 | --- | --- | --- |
-| Backend for Frontend OAuth 2.0 | SPA kao Client for OAuth 2.0 | Backend interno sprema `client_secret` i `client_id`, moguća alternativa je da Frontend koristi `PKCE` za direktnu authentikaciju, BFF obrazac je sigurniji pa smo se za njega odlučili, iako je `Frontend kao klijent` obrazac možda jednostavniji za implementirati. |
-| Frontend Proxy | Direktan poziv Backendu | Da bismo zaobišli konfiguraciju `CORS`-a iskoristili smo proxy na frontendu koji sve kasnije prosljeđuje backendu. Za nas je to značilo nešto kompliciranije postavljanje na poslužitelj |
-|Spremanja vanjskih događaje | Poziv API-ja za dogvaćanje vanjskih događaja | Sinkronizacija vanjskih događaja sa našim implementirana je tako da periodično zovemo vanjski API, i te podatke spremamo u CultureVulture bazu. To nam omogučuje jedan poziv bazi za dohvaćanje svih događaja odjednom, i kasnije, jednostavniju integraciju sa sortiranjem / filtriranje / pretraživanje, ali i znači da ako dogodila promjena na vanjskom API-ju, dok period ne istekne je nećemo učitati. |
+| Backend for Frontend OAuth 2.0 | SPA kao Client for OAuth 2.0 | Backend interno sprema `client_secret` i `client_id`. Moguća alternativa je da frontend koristi `PKCE` za izravnu autentikaciju. BFF obrazac je sigurniji pa smo se odlučili za njega, iako bi obrazac `Frontend kao klijent` možda bio jednostavniji za implementaciju. |
+| Frontend Proxy | Izravan poziv backendu | Da bismo zaobišli konfiguraciju `CORS`-a, iskoristili smo proxy na frontendu koji sve zahtjeve prosljeđuje backendu. Za nas je to značilo nešto složenije postavljanje na poslužitelj. |
+| Spremanje vanjskih događaja | Poziv API-ja za dohvaćanje vanjskih događaja | Sinkronizacija vanjskih događaja s našima implementirana je tako da periodično pozivamo vanjski API i te podatke spremamo u CultureVulture bazu. To nam omogućuje dohvaćanje svih događaja odjednom jednim pozivom bazi te kasnije jednostavniju integraciju sortiranja / filtriranja / pretraživanja, ali i znači da, ako se dogodi promjena na vanjskom API-ju, nećemo je učitati dok period ne istekne. |
 
 
 ## 4.2 Gradivni blokovi i UML dijagram komponenata
@@ -82,7 +82,7 @@ Za svaki UML dijagram čuvajte čitljivu sliku i PlantUML izvor, kako je opisano
 
 ## 4.5 Zapisi arhitekturnih odluka
 
-**Cilj:** Sačuvati razloge i obrazložiti odabrane važne arhitekturne odluke kada tablica u odjelku 4.1 nije dovoljna za očuvanje konteksta, razmatranih alternativa i prihvaćenih kompromisa.
+**Cilj:** Sačuvati razloge i obrazložiti odabrane važne arhitekturne odluke kada tablica u odjeljku 4.1 nije dovoljna za očuvanje konteksta, razmatranih alternativa i prihvaćenih kompromisa.
 
 Napišite nekoliko ADR-a za važne odluke čije obrazloženje, alternative i kompromis treba sačuvati. Ostale arhitekturne odluke dovoljno je zabilježiti u tablici.
 
@@ -92,22 +92,22 @@ Napišite nekoliko ADR-a za važne odluke čije obrazloženje, alternative i kom
 
 | Polje | Zapis odluke |
 | --- | --- |
-| Kontekst i cilj | Korisnicima želimo omogućiti prikaz događaja sa vanjskog API-ja, ti događaji bi trebali biti ažurni i točni |
-| Kriteriji odluke | Za prvu predaju, bilo kakav prikaz vanjskih podataka bio bi prihvaljijv.  |
-| Razmatrane alternative | Spremanje događanja vanjskog API-ja periodično. Spremanje novih događaja kada vrijeme ntog posljednjeg događaja istekne.  |
-| Odluka i obrazloženje | Odabrana odluku služi za razvoj dok se ne odlučimo za bolju arhitekturu. Tretačno je najjenostavnija implemntacija koja sprema vanjske događaje i u CultureVulture bazu podataka. |
-| Status | Zamjenjeno: Spremanje vanjskih događaja periodično. |
+| Kontekst i cilj | Korisnicima želimo omogućiti prikaz događaja s vanjskog API-ja; ti bi događaji trebali biti ažurni i točni. |
+| Kriteriji odluke | Za prvu predaju bilo kakav prikaz vanjskih podataka bio bi prihvatljiv. |
+| Razmatrane alternative | Periodično spremanje događaja s vanjskog API-ja. Spremanje novih događaja kada istekne vrijeme n-tog posljednjeg događaja. |
+| Odluka i obrazloženje | Odabrana odluka služi za razvoj dok se ne odlučimo za bolju arhitekturu. Trenutačno je to najjednostavnija implementacija koja vanjske događaje sprema i u CultureVulture bazu podataka. |
+| Status | Zamijenjeno: periodično spremanje vanjskih događaja. |
 
 ## 4.6 Zajednička pravila oblikovanja (engl. Cross-cutting concerns)
 
-**Cilj:** Prepoznati i opisati globalna pravila i mehanizme oblikovanja koji se primjenjujuju u više dijelova aplikacije, navesti gdje se planira primijeniti i ažurirati objašnjenje kako implementacija poprima konačan oblik. Uključite samo pravila koja su važna za ovaj projekt.
+**Cilj:** Prepoznati i opisati globalna pravila i mehanizme oblikovanja koji se primjenjuju u više dijelova aplikacije, navesti gdje se planiraju primijeniti i ažurirati objašnjenje kako implementacija poprima konačan oblik. Uključite samo pravila koja su važna za ovaj projekt.
 
 **Implementirani mehanizmi:**
 
 | Aspekt | Mehanizam | Pravilo | Mjesto primjene |
 | --- | --- | --- | --- |
-| Sigurnost | Autorizacija korisnika | Ovlasti se provjeravaju na poslužiteljskoj strani za svaki zaštićeni zahtjev; skrivanje elemenata korisničkog sučelja nije dovoljna zaštita. |  Middleware za autorizaciju / zaštita API usmjernika. |
-| Validacija podataka | Provjera ulaznih podataka | Podaci događaja dohvačeni sa TicketMaster API-ja provjeravaju se prije pohrane. | Sloj za obradu zahtjeva |
+| Sigurnost | Autorizacija korisnika | Ovlasti se provjeravaju na poslužiteljskoj strani za svaki zaštićeni zahtjev; skrivanje elemenata korisničkog sučelja nije dovoljna zaštita. | Middleware za autorizaciju / zaštita API usmjernika. |
+| Validacija podataka | Provjera ulaznih podataka | Podaci događaja dohvaćeni s TicketMaster API-ja provjeravaju se prije pohrane. | Sloj za obradu zahtjeva |
 
 ## 4.7 Arhitekturni rizici i tehnički dug
 
@@ -117,12 +117,12 @@ Napišite nekoliko ADR-a za važne odluke čije obrazloženje, alternative i kom
 
 | Rizik ili kompromis | Posljedica | Odgovor na rizik  |
 | --- | --- | --- |
-| Nedostatak logike za brisanje događaja koji su završili. | *Veličina baze će rasti i zauzimati više prostora nego što je to stvarno potrebno.* | *Prihvaćeni tehnički dug za demo verziju. U budućnosti planirano dodavanje logike za brisanje evenata.* |
-| *Nepostojanje paginacije na API-ju* | *Moguće usporenje klijenta pri dohvaćanju velike količine podataka iz baze. I dohvačanja velike količine podataka sa vanjskog API-ja za događaje* | *Dodavanje paginacije ostavljeno za sljedeću iteraciju.* |
-| Nužnost vanjskog API-ja za događaje | *Kvar poslužitelja vanjskih podataka prouzrokovati će i kvar CultureVulture API-ja za prikazivanje događaja, ako je period ažurnosti istekao.* | Dodavanje opcijalnog poziva vanjskom API-ju ostavljeno za sljedeću iteraciju |
+| Nedostatak logike za brisanje događaja koji su završili. | *Veličina baze će rasti i zauzimati više prostora nego što je to stvarno potrebno.* | *Prihvaćeni tehnički dug za demo verziju. U budućnosti planirano dodavanje logike za brisanje događaja.* |
+| *Nepostojanje paginacije na API-ju* | *Moguće usporenje klijenta pri dohvaćanju velike količine podataka iz baze i s vanjskog API-ja za događaje.* | *Dodavanje paginacije ostavljeno za sljedeću iteraciju.* |
+| Nužnost vanjskog API-ja za događaje | *Kvar poslužitelja vanjskih podataka prouzročit će i kvar CultureVulture API-ja za prikazivanje događaja ako je period ažurnosti istekao.* | Dodavanje opcionalnog poziva vanjskom API-ju ostavljeno za sljedeću iteraciju. |
 
 **Poslovni ili domenski rizici, ako su značajni**
 
 | Rizik | Posljedica | Odgovor na rizik |
 | --- | --- | --- |
-| **Nemogućnost altenartivne prijave** | Kvar IdP poslužitelja (za OIDC) privremeno onemogućuje nove prijave i registracije. | Prihvaćeno u okviru ograničenja projekta za kolegij. |
+| **Nemogućnost alternativne prijave** | Kvar IdP poslužitelja (za OIDC) privremeno onemogućuje nove prijave i registracije. | Prihvaćeno u okviru ograničenja projekta za kolegij. |
