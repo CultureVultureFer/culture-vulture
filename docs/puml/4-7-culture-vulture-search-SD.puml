@@ -4,7 +4,7 @@
 ' Svrha:    Prikazuje pretraživanje događaja po nazivu događaja ili organizacije;
 '           Prije pretrage sinkronizira događaje s Ticketmasterom i  ako 
 '           vanjski servis ne odgovori ispravno, vraća grešku 502
-' Autor:    Tibor Brestovac, kolegij Programsko inženjerstvo
+' Autor:    Tibor Brestovac, Karlo Čehulić, kolegij Programsko inženjerstvo
 ' AI:       Dijagram je izradio autor. AI je pomogao u reviziji i komentarima;
 '           autor ih je pregledao i odgovara za konačni sadržaj.
 ' Praćenje: HTTP statusi, interakcije i grane trebaju ostati usklađeni s
@@ -13,7 +13,7 @@
 '
 ' Diagram level: Conceptual Interaction Design
 ' Diagram type:  Sequence Diagram
-' Version:       1.0
+' Version:       1.1
 ' ==============================================================================
     
     @startuml
@@ -44,19 +44,13 @@
     User -> Web ++ : Upis pojma za pretraživanje
     Web -> API ++ : GET /api/events/?search={pojam}
 
-    API -> Ticketmaster ++ : Dohvati događaje
+    ref over API, Ticketmaster, Store
+      Ažuriraj događaje s Ticketmastera
+    end ref
 
-    alt Ticketmaster vrati grešku
-        Ticketmaster --> API : HTTP error
-        API --> Web : 502 s porukom greške
-        Web --> User : Prikaži pogrešku
-    else Ticketmaster vrati događaje
-        Ticketmaster --> API -- : Popis događaja
-        API -> Store ++ : Spremi ili ažuriraj događaje
-        Store --> API -- : Potvrda
-        API -> Store ++ : Dohvati događaje koji odgovaraju pojmu pretrage
-        Store --> API -- : Popis događaja
-        API --> Web -- : 200 s popisom događaja
-        Web --> User -- : Prikaži događaje
-    end
+
+    API -> Store ++ : Dohvati događaje koji odgovaraju pojmu pretrage
+    Store --> API -- : Popis događaja
+    API --> Web -- : 200 s popisom događaja
+    Web --> User -- : Prikaži događaje
     @enduml
